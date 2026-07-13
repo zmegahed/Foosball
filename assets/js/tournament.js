@@ -194,14 +194,14 @@
   }
 
   async function loadData(options = {}) {
-    const usePreview = options.preview || new URLSearchParams(window.location.search).get('preview') === '1';
-    if (usePreview) {
-      const preview = localStorage.getItem(STORAGE_KEY);
-      if (preview) {
+    const useLocalData = options.useLocal !== false;
+    if (useLocalData) {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
         try {
-          return normalizeData(JSON.parse(preview));
+          return normalizeData(JSON.parse(saved));
         } catch (error) {
-          console.warn('Could not read preview data.', error);
+          console.warn('Could not read saved tournament data.', error);
         }
       }
     }

@@ -2,7 +2,6 @@
   'use strict';
 
   let currentData = null;
-  const previewMode = new URLSearchParams(window.location.search).get('preview') === '1';
 
   function playerRow(player, match, side) {
     const isWinner = Boolean(match.winner && player && match.winner.id === player.id);
@@ -101,8 +100,8 @@
       container.innerHTML = `
         <div class="schedule-empty">
           <span>Schedule pending</span>
-          <h3>Match dates have not been published yet.</h3>
-          <p>The tournament organizer can generate and edit every slot from the control room.</p>
+          <h3>Match dates have not been confirmed yet.</h3>
+          <p>Match dates and times will appear here once they are confirmed.</p>
         </div>`;
       return;
     }
@@ -219,7 +218,7 @@
   }
 
   async function refresh() {
-    const data = await Tournament.loadData({ preview: previewMode });
+    const data = await Tournament.loadData();
     if (JSON.stringify(data) !== JSON.stringify(currentData)) render(data);
   }
 
@@ -251,6 +250,6 @@
     initNavigation();
     initBracketControls();
     await refresh();
-    if (!previewMode) window.setInterval(refresh, 30000);
+    window.setInterval(refresh, 30000);
   });
 }());

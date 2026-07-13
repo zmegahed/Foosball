@@ -1,87 +1,82 @@
-# Nations Cup Foosball Tournament
+# Nations Cup — GitHub Pages Website
 
-A polished static tournament hub designed for GitHub Pages. It includes:
+A responsive 13-player foosball tournament hub with a public bracket, match schedule, player roster, and password-gated tournament desk.
 
-- A public live bracket and player roster
-- A separate results control room
-- Automatic byes for an uneven number of players
-- Automatic winner progression after score entry
-- Editable date, time, and table slots for every played match
-- Automatic schedule generation by start date, match length, table count, and round breaks
-- Browser preview before publishing
-- Direct publishing to `tournament-data.json` through the GitHub Contents API
-- Manual JSON download as a fallback
-- Responsive desktop, tablet, and mobile layouts
+## Tournament format
 
-## Fastest GitHub Pages setup
+- 13 total players
+- Five played matches in the opening round
+- Three opening-round byes
+- Eight players in the quarterfinals
+- No byes after the opening round
+- Winners advance automatically after a score is saved
 
-1. Create a new GitHub repository, such as `nations-cup`.
-2. Upload everything in this folder to the repository root.
-3. Open **Settings → Pages** in GitHub.
-4. Under **Build and deployment**, choose **Deploy from a branch**.
-5. Select the `main` branch and `/ (root)`, then save.
-6. Your public site will be available at:
-   `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/`
-7. The results control room will be at:
-   `https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/admin.html`
+## Publish on GitHub Pages
 
-## Entering results
+1. Create a new GitHub repository.
+2. Upload every file and folder from this package to the repository root.
+3. Open **Settings → Pages**.
+4. Select **Deploy from a branch**.
+5. Choose the `main` branch and `/ (root)` folder.
+6. Open the GitHub Pages address shown by GitHub.
 
-Open `admin.html`, go to **Results**, enter both scores, and save. Ties are blocked because each match must produce a winner. Winners automatically move into the next round.
+The public tournament page is the repository’s main URL.
 
-The 13-player draw is placed into a balanced 16-slot bracket. Five opening matches involve 10 players, while three players receive opening-round byes. This produces exactly eight quarterfinalists, so there are no byes in the quarterfinals, semifinals, or final.
+The private management page is available only by typing:
 
-## Setting match dates
+```text
+https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/admin.html
+```
 
-Open `admin.html` and select **Schedule**. Choose the tournament start date, first match time, expected match length, number of available tables, and break between rounds. Press **Generate date slots**.
+There is no admin link or management wording on the public homepage.
 
-The generator creates all 12 played-match slots and skips the three opening-round byes. Every generated date, time, and table can be edited individually before publishing.
+## Admin password
 
-## Previewing changes
+The initial password is:
 
-The control room stores edits in browser local storage. Press **Open preview** to see those unpublished changes on the public layout.
+```text
+NationsCup13!
+```
 
-Browser preview data is device-specific. Other visitors will not see it until you publish.
+Open `admin.html`, enter that password, and manage the tournament. The desk remains unlocked for the current browser session until **Lock desk** is pressed or the session ends.
 
-## Publishing directly from the control room
+A replacement password can be set under **Tournament setup → Admin access**. Because GitHub Pages is static, a password changed through the page applies only to that browser. The built-in password gate is a convenience barrier, not server-side authentication.
 
-Create a fine-grained GitHub personal access token that:
+## Enter results
 
-- Can access only this tournament repository
-- Has repository **Contents** permission set to **Read and write**
+Open **Results**, enter both scores, and press **Save result**. Ties are blocked. The winner is placed into the correct next-round match automatically.
 
-In the control room, enter:
+## Create date slots
 
-- Repository owner: your GitHub username or organization
-- Repository name
-- Branch: usually `main`
-- File path: `tournament-data.json`
-- Your fine-grained token
+Open **Schedule** and set:
 
-Press **Publish live results**. The page updates `tournament-data.json` through GitHub's repository contents API.
+- Tournament start date
+- First match time
+- Expected match duration
+- Number of foosball tables
+- Break between rounds
 
-### Token safety
+Press **Generate date slots**. The site creates all 12 playable match slots and skips the three opening-round byes. Every date, time, and table can be edited individually.
 
-- Never paste a token into any project file.
-- Never commit a token to GitHub.
-- Leave **Remember the token** unchecked on shared devices.
-- The admin page is a convenience dashboard, not a secure authentication system. Keep its URL private where practical.
+## How saving works
 
-## Manual publishing fallback
+Changes save automatically in the current browser and appear on the public page when it is opened in that same browser.
 
-Press **Download data file instead** in the Publishing tab. Replace the repository's existing `tournament-data.json` with the downloaded file and commit the change.
+GitHub Pages cannot securely update shared website files using only a browser password. To make the latest results visible to visitors on every device without entering repository credentials in the site:
 
-## Editing the original players
+1. Open **Tournament setup → Data tools**.
+2. Press **Download backup**.
+3. Replace `tournament-data.json` in the GitHub repository with the downloaded file.
 
-The starting roster is stored in `tournament-data.json`. It can also be edited from **Tournament setup → Players & seeding**. Changing the player list or draw resets existing scores so later-round results cannot point to the wrong players.
+The **Restore backup** button can load that file on another device.
 
-## Main files
+## Files
 
 - `index.html` — public tournament hub
-- `admin.html` — score entry and publishing dashboard
-- `tournament-data.json` — shared tournament data
-- `assets/js/tournament.js` — bracket engine and shared utilities
-- `assets/js/public.js` — public rendering and live refresh
-- `assets/js/admin.js` — results, setup, preview, and GitHub publishing
-- `assets/css/styles.css` — public visual system
-- `assets/css/admin.css` — control room styles
+- `admin.html` — password-gated tournament desk
+- `tournament-data.json` — shared starting data
+- `assets/js/tournament.js` — bracket and storage engine
+- `assets/js/public.js` — public page rendering
+- `assets/js/admin.js` — password gate, score entry, scheduling, and setup
+- `assets/css/styles.css` — public styles
+- `assets/css/admin.css` — admin and login styles

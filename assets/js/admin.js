@@ -1,17 +1,17 @@
 (function () {
   'use strict';
 
-  const REPO_SETTINGS_KEY = 'nations-cup-github-settings-v1';
-  const TOKEN_SESSION_KEY = 'nations-cup-github-token-session';
-  const TOKEN_LOCAL_KEY = 'nations-cup-github-token-local';
+  const AUTH_SESSION_KEY = 'nations-cup-admin-auth-v1';
+  const PASSWORD_HASH_KEY = 'nations-cup-admin-password-hash-v1';
+  const DEFAULT_PASSWORD = 'NationsCup13!';
+  const DEFAULT_PASSWORD_HASH = '3ce85bd40eef318be7ef579413331344bd32125866b0e671c66275412a07504d';
   let workingData = null;
-  let dirty = false;
+  let appInitialized = false;
 
   const qs = (selector, scope = document) => scope.querySelector(selector);
   const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
-  function markDirty(message = 'Changes saved to this browser preview.') {
-    dirty = true;
+  function markDirty(message = 'Changes saved on this device.') {
     workingData.settings.updatedAt = new Date().toISOString();
     Tournament.savePreview(workingData);
     setStatus(message, 'success');
@@ -160,7 +160,7 @@
 
   function saveSchedule() {
     syncScheduleFromEditor();
-    markDirty('Match date and time slots saved to the browser preview.');
+    markDirty('Match date and time slots saved.');
     renderMatches();
   }
 
@@ -217,7 +217,7 @@
 
     workingData.schedule = generated;
     workingData.settings.date = Tournament.formatScheduleDate({ date: dateValue });
-    markDirty('A complete tournament timetable was generated. Review the individual slots before publishing.');
+    markDirty('A complete tournament timetable was generated and saved. Review any individual slots below.');
     renderEventForm();
     renderScheduleEditors();
     renderMatches();
@@ -253,7 +253,7 @@
       scoreB,
       updatedAt: new Date().toISOString()
     };
-    markDirty(`${scoreA > scoreB ? match.playerA.name : match.playerB.name} advances. Preview updated.`);
+    markDirty(`${scoreA > scoreB ? match.playerA.name : match.playerB.name} advances. The bracket has been updated.`);
     renderMatches();
     renderScheduleEditors();
   }
@@ -287,7 +287,7 @@
       location: qs('#event-location').value.trim(),
       status: qs('#event-status').value.trim()
     };
-    markDirty('Event details updated in the browser preview.');
+    markDirty('Event details saved.');
   }
 
   function renderPlayersEditor() {
@@ -359,7 +359,7 @@
     let id = `player-${nextNumber}`;
     while (workingData.players.some((player) => player.id === id)) id = `${id}-${Date.now()}`;
     workingData.players.push({ id, seed: nextNumber, name: `Player ${nextNumber}`, nation: 'Nation TBD', flag: '🌐' });
-    resetResultsForDrawChange('Player added. Complete their details before publishing.');
+    resetResultsForDrawChange('Player added. Complete their details, then save the draw.');
   }
 
   function savePlayers() {
@@ -390,116 +390,127 @@
     qs('[data-summary-champion]').textContent = bracket.champion?.name || 'Pending';
   }
 
-  function loadRepoSettings() {
-    let saved = {};
-    try { saved = JSON.parse(localStorage.getItem(REPO_SETTINGS_KEY) || '{}'); } catch (error) { saved = {}; }
-    qs('#github-owner').value = saved.owner || '';
-    qs('#github-repo').value = saved.repo || '';
-    qs('#github-branch').value = saved.branch || 'main';
-    qs('#github-path').value = saved.path || 'tournament-data.json';
-    const rememberedToken = localStorage.getItem(TOKEN_LOCAL_KEY);
-    const sessionToken = sessionStorage.getItem(TOKEN_SESSION_KEY);
-    qs('#github-token').value = rememberedToken || sessionToken || '';
-    qs('#remember-token').checked = Boolean(rememberedToken);
-  }
-
-  function storeRepoSettings() {
-    const settings = {
-      owner: qs('#github-owner').value.trim(),
-      repo: qs('#github-repo').value.trim(),
-      branch: qs('#github-branch').value.trim() || 'main',
-      path: qs('#github-path').value.trim() || 'tournament-data.json'
-    };
-    localStorage.setItem(REPO_SETTINGS_KEY, JSON.stringify(settings));
-    const token = qs('#github-token').value.trim();
-    sessionStorage.setItem(TOKEN_SESSION_KEY, token);
-    if (qs('#remember-token').checked) localStorage.setItem(TOKEN_LOCAL_KEY, token);
-    else localStorage.removeItem(TOKEN_LOCAL_KEY);
-    return { ...settings, token };
-  }
-
-  async function publishToGitHub() {
-    const buttons = qsa('[data-publish]');
-    const config = storeRepoSettings();
-    if (!config.owner || !config.repo || !config.token) {
-      setStatus('Add the repository owner, repository name, and a GitHub token first.', 'error');
-      return;
-    }
-
-    buttons.forEach((button) => {
-      button.disabled = true;
-      button.textContent = 'Publishing…';
-    });
-    setStatus('Connecting to GitHub…', 'neutral');
-
-    try {
-      syncPlayersFromEditor();
-      syncScheduleFromEditor();
-      workingData.settings.updatedAt = new Date().toISOString();
-      const apiUrl = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${config.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(config.branch)}`;
-      const headers = {
-        Accept: 'application/vnd.github+json',
-        Authorization: `Bearer ${config.token}`,
-        'X-GitHub-Api-Version': '2022-11-28'
-      };
-
-      let sha;
-      const existingResponse = await fetch(apiUrl, { headers });
-      if (existingResponse.ok) {
-        const existing = await existingResponse.json();
-        sha = existing.sha;
-      } else if (existingResponse.status !== 404) {
-        const errorBody = await existingResponse.json().catch(() => ({}));
-        throw new Error(errorBody.message || `GitHub returned ${existingResponse.status}`);
-      }
-
-      const updateUrl = apiUrl.split('?')[0];
-      const payload = {
-        message: `Update tournament results — ${new Date().toLocaleString()}`,
-        content: Tournament.toBase64(`${JSON.stringify(workingData, null, 2)}\n`),
-        branch: config.branch
-      };
-      if (sha) payload.sha = sha;
-
-      const updateResponse = await fetch(updateUrl, {
-        method: 'PUT',
-        headers: { ...headers, 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const responseBody = await updateResponse.json().catch(() => ({}));
-      if (!updateResponse.ok) throw new Error(responseBody.message || `Publish failed with ${updateResponse.status}`);
-
-      dirty = false;
-      Tournament.savePreview(workingData);
-      setStatus('Published. GitHub Pages will serve the new results after its next site refresh.', 'success');
-      renderSummary();
-    } catch (error) {
-      setStatus(`Publish failed: ${error.message}`, 'error');
-    } finally {
-      buttons.forEach((button) => {
-        button.disabled = false;
-        button.textContent = 'Publish live results';
-      });
-    }
-  }
-
   function downloadData() {
     syncPlayersFromEditor();
     syncScheduleFromEditor();
     workingData.settings.updatedAt = new Date().toISOString();
-    const blob = new Blob([`${JSON.stringify(workingData, null, 2)}\n`], { type: 'application/json' });
+    Tournament.savePreview(workingData);
+    const blob = new Blob([`${JSON.stringify(workingData, null, 2)}
+`], { type: 'application/json' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
     link.download = 'tournament-data.json';
     link.click();
     URL.revokeObjectURL(link.href);
-    setStatus('Downloaded tournament-data.json. Replace the file in your repository to publish manually.', 'success');
+    setStatus('Tournament backup downloaded.', 'success');
+  }
+
+  async function importData(event) {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+    try {
+      const parsed = JSON.parse(await file.text());
+      workingData = Tournament.normalizeData(parsed);
+      Tournament.savePreview(workingData);
+      renderAll();
+      setStatus('Tournament backup restored successfully.', 'success');
+    } catch (error) {
+      setStatus('That file is not a valid tournament backup.', 'error');
+    } finally {
+      event.currentTarget.value = '';
+    }
+  }
+
+  async function hashPassword(value) {
+    if (!window.crypto?.subtle) return null;
+    const bytes = new TextEncoder().encode(value);
+    const digest = await window.crypto.subtle.digest('SHA-256', bytes);
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+  }
+
+  function activePasswordHash() {
+    return localStorage.getItem(PASSWORD_HASH_KEY) || DEFAULT_PASSWORD_HASH;
+  }
+
+  async function passwordMatches(value) {
+    const hash = await hashPassword(value);
+    if (hash) return hash === activePasswordHash();
+    return !localStorage.getItem(PASSWORD_HASH_KEY) && value === DEFAULT_PASSWORD;
+  }
+
+  async function changePassword(event) {
+    event.preventDefault();
+    const current = qs('[data-current-password]').value;
+    const next = qs('[data-new-password]').value;
+    const confirm = qs('[data-confirm-password]').value;
+
+    if (!(await passwordMatches(current))) {
+      setStatus('The current password is incorrect.', 'error');
+      return;
+    }
+    if (next.length < 8) {
+      setStatus('Use a password with at least eight characters.', 'error');
+      return;
+    }
+    if (next !== confirm) {
+      setStatus('The new passwords do not match.', 'error');
+      return;
+    }
+    const nextHash = await hashPassword(next);
+    if (!nextHash) {
+      setStatus('Password changes require the site to be opened over HTTPS.', 'error');
+      return;
+    }
+    localStorage.setItem(PASSWORD_HASH_KEY, nextHash);
+    event.currentTarget.reset();
+    setStatus('Admin password updated. It will be required after you lock the desk.', 'success');
+  }
+
+  function showAdminApp() {
+    document.body.classList.remove('admin-body--locked');
+    qs('[data-login-screen]').hidden = true;
+    qs('[data-admin-app]').hidden = false;
+  }
+
+  function showLogin() {
+    document.body.classList.add('admin-body--locked');
+    qs('[data-admin-app]').hidden = true;
+    qs('[data-login-screen]').hidden = false;
+    qs('[data-login-password]').value = '';
+    qs('[data-login-error]').textContent = '';
+    window.setTimeout(() => qs('[data-login-password]')?.focus(), 50);
+  }
+
+  async function unlockAdmin(event) {
+    event.preventDefault();
+    const input = qs('[data-login-password]');
+    const error = qs('[data-login-error]');
+    const submit = event.currentTarget.querySelector('button[type="submit"]');
+    submit.disabled = true;
+    submit.textContent = 'Checking…';
+
+    if (await passwordMatches(input.value)) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, 'unlocked');
+      error.textContent = '';
+      showAdminApp();
+      await initApp();
+    } else {
+      error.textContent = 'Incorrect password. Try again.';
+      input.select();
+    }
+
+    submit.disabled = false;
+    submit.textContent = 'Unlock tournament desk';
+  }
+
+  function lockAdmin() {
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    showLogin();
   }
 
   function resetPreview() {
     Tournament.clearPreview();
     workingData = Tournament.normalizeData(Tournament.FALLBACK_DATA);
-    dirty = false;
     Tournament.savePreview(workingData);
     renderAll();
     setStatus('Tournament reset to the original 13-player draw with three opening-round byes and no later byes.', 'success');
@@ -521,27 +532,34 @@
     renderSummary();
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    workingData = await Tournament.loadData({ preview: true });
+  async function initApp() {
+    if (appInitialized) return;
+    appInitialized = true;
+    workingData = await Tournament.loadData();
     Tournament.savePreview(workingData);
     initTabs();
-    loadRepoSettings();
     renderAll();
 
     qs('[data-event-form]')?.addEventListener('submit', saveEventSettings);
     qs('[data-schedule-generator]')?.addEventListener('submit', generateSchedule);
     qs('[data-save-schedule]')?.addEventListener('click', saveSchedule);
-    qs('[data-add-player]').addEventListener('click', addPlayer);
-    qs('[data-save-players]').addEventListener('click', savePlayers);
-    qs('[data-shuffle]').addEventListener('click', shuffleDraw);
-    qsa('[data-publish]').forEach((button) => button.addEventListener('click', publishToGitHub));
-    qs('[data-download]').addEventListener('click', downloadData);
-    qs('[data-reset]').addEventListener('click', resetPreview);
+    qs('[data-add-player]')?.addEventListener('click', addPlayer);
+    qs('[data-save-players]')?.addEventListener('click', savePlayers);
+    qs('[data-shuffle]')?.addEventListener('click', shuffleDraw);
+    qs('[data-download]')?.addEventListener('click', downloadData);
+    qs('[data-import]')?.addEventListener('change', importData);
+    qs('[data-password-form]')?.addEventListener('submit', changePassword);
+    qs('[data-reset]')?.addEventListener('click', resetPreview);
+    qs('[data-lock-admin]')?.addEventListener('click', lockAdmin);
+  }
 
-    window.addEventListener('beforeunload', (event) => {
-      if (!dirty) return;
-      event.preventDefault();
-      event.returnValue = '';
-    });
+  document.addEventListener('DOMContentLoaded', async () => {
+    qs('[data-login-form]')?.addEventListener('submit', unlockAdmin);
+    if (sessionStorage.getItem(AUTH_SESSION_KEY) === 'unlocked') {
+      showAdminApp();
+      await initApp();
+    } else {
+      showLogin();
+    }
   });
 }());

@@ -5,144 +5,157 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#10120f">
   <meta name="robots" content="noindex, nofollow">
-  <title>Nations Cup — Control Room</title>
+  <title>Nations Cup — Tournament Desk</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="assets/css/styles.css">
   <link rel="stylesheet" href="assets/css/admin.css">
 </head>
-<body class="admin-body">
-  <header class="admin-header">
-    <a class="brand" href="index.html"><span class="brand__ball"></span><span><strong>Nations Cup</strong><small>Control room</small></span></a>
-    <div class="admin-header__actions">
-      <a class="button button--ghost" href="index.html?preview=1" target="_blank" rel="noopener">Open preview</a>
-      <button class="button button--primary" type="button" data-publish>Publish live results</button>
-    </div>
-  </header>
-
-  <main class="admin-main">
-    <section class="admin-intro">
-      <div>
-        <p class="eyebrow"><span class="eyebrow__dot"></span>Tournament management</p>
-        <h1>Run the table.</h1>
-        <p>Enter scores, manage the draw, preview changes, then publish the shared tournament data directly to your GitHub repository.</p>
+<body class="admin-body admin-body--locked">
+  <section class="admin-login" data-login-screen>
+    <div class="admin-login__court" aria-hidden="true"><span></span><span></span><span></span></div>
+    <form class="admin-login__card" data-login-form>
+      <a class="brand" href="index.html" aria-label="Return to Nations Cup">
+        <span class="brand__ball"></span>
+        <span><strong>Nations Cup</strong><small>Tournament desk</small></span>
+      </a>
+      <div class="admin-login__copy">
+        <p class="eyebrow"><span class="eyebrow__dot"></span>Restricted access</p>
+        <h1>Enter the desk.</h1>
+        <p>Use the tournament password to manage results, match slots, and the draw.</p>
       </div>
-      <div class="admin-summary">
-        <div><span data-summary-players>13</span><small>Players</small></div>
-        <div><span data-summary-byes>3</span><small>Byes</small></div>
-        <div><span data-summary-results>0/0</span><small>Results</small></div>
-        <div><span data-summary-champion>Pending</span><small>Champion</small></div>
+      <label class="admin-login__field">
+        <span>Password</span>
+        <input type="password" autocomplete="current-password" data-login-password required autofocus>
+      </label>
+      <p class="admin-login__error" data-login-error role="alert" aria-live="polite"></p>
+      <button class="button button--primary" type="submit">Unlock tournament desk</button>
+      <a class="admin-login__back" href="index.html">← Return to tournament</a>
+    </form>
+  </section>
+
+  <div data-admin-app hidden>
+    <header class="admin-header">
+      <a class="brand" href="index.html"><span class="brand__ball"></span><span><strong>Nations Cup</strong><small>Tournament desk</small></span></a>
+      <div class="admin-header__actions">
+        <a class="button button--ghost" href="index.html" target="_blank" rel="noopener">View public page</a>
+        <button class="button button--primary" type="button" data-lock-admin>Lock desk</button>
       </div>
-    </section>
+    </header>
 
-    <div class="admin-status" data-admin-status data-type="neutral">Changes are saved in this browser until you publish them.</div>
+    <main class="admin-main">
+      <section class="admin-intro">
+        <div>
+          <p class="eyebrow"><span class="eyebrow__dot"></span>Tournament management</p>
+          <h1>Run the table.</h1>
+          <p>Enter scores, manage the draw, and assign every match date. Changes save automatically on this device.</p>
+        </div>
+        <div class="admin-summary">
+          <div><span data-summary-players>13</span><small>Players</small></div>
+          <div><span data-summary-byes>3</span><small>Byes</small></div>
+          <div><span data-summary-results>0/0</span><small>Results</small></div>
+          <div><span data-summary-champion>Pending</span><small>Champion</small></div>
+        </div>
+      </section>
 
-    <nav class="admin-tabs" aria-label="Control room sections">
-      <button class="is-active" type="button" data-tab-button="results">Results</button>
-      <button type="button" data-tab-button="schedule">Schedule</button>
-      <button type="button" data-tab-button="setup">Tournament setup</button>
-      <button type="button" data-tab-button="publish">Publishing</button>
-    </nav>
+      <div class="admin-status" data-admin-status data-type="neutral">Changes save automatically and appear on the public page in this browser.</div>
 
-    <section class="admin-panel is-active" data-tab-panel="results">
-      <header class="admin-panel__heading">
-        <div><p>Score desk</p><h2>Match results</h2></div>
-        <p>Save a non-tied score and the winner will automatically appear in the next round.</p>
-      </header>
-      <div data-match-editors></div>
-    </section>
+      <nav class="admin-tabs" aria-label="Tournament desk sections">
+        <button class="is-active" type="button" data-tab-button="results">Results</button>
+        <button type="button" data-tab-button="schedule">Schedule</button>
+        <button type="button" data-tab-button="setup">Tournament setup</button>
+      </nav>
 
+      <section class="admin-panel is-active" data-tab-panel="results">
+        <header class="admin-panel__heading">
+          <div><p>Score desk</p><h2>Match results</h2></div>
+          <p>Save a non-tied score and the winner will automatically appear in the next round.</p>
+        </header>
+        <div data-match-editors></div>
+      </section>
 
-    <section class="admin-panel" data-tab-panel="schedule">
-      <header class="admin-panel__heading">
-        <div><p>Time desk</p><h2>Match date slots</h2></div>
-        <p>Generate all 12 playable match slots, then adjust any date, time, or table individually. Opening-round byes are never scheduled.</p>
-      </header>
+      <section class="admin-panel" data-tab-panel="schedule">
+        <header class="admin-panel__heading">
+          <div><p>Time desk</p><h2>Match date slots</h2></div>
+          <p>Generate all 12 playable match slots, then adjust any date, time, or table individually. Opening-round byes are never scheduled.</p>
+        </header>
 
-      <article class="admin-card schedule-generator-card">
-        <header><p>Automatic setup</p><h2>Generate the timetable</h2></header>
-        <form class="form-grid" data-schedule-generator>
-          <label><span>Tournament start date</span><input id="schedule-start-date" type="date" required></label>
-          <label><span>First match time</span><input id="schedule-start-time" type="time" value="12:00" required></label>
-          <label><span>Minutes per match</span><input id="schedule-duration" type="number" min="5" step="5" value="15" required></label>
-          <label><span>Foosball tables</span><input id="schedule-tables" type="number" min="1" step="1" value="1" required></label>
-          <label><span>Break between rounds</span><input id="schedule-round-break" type="number" min="0" step="5" value="10" required></label>
-          <div class="form-grid__wide"><button class="button button--primary" type="submit">Generate date slots</button></div>
-        </form>
-      </article>
-
-      <div class="schedule-editor" data-schedule-editors></div>
-      <div class="schedule-save-bar">
-        <p>Review the generated timetable and edit any slot before publishing.</p>
-        <button class="button button--primary" type="button" data-save-schedule>Save schedule changes</button>
-      </div>
-    </section>
-
-    <section class="admin-panel" data-tab-panel="setup">
-      <div class="admin-grid admin-grid--setup">
-        <article class="admin-card">
-          <header><p>Public page</p><h2>Event details</h2></header>
-          <form class="form-grid" data-event-form>
-            <label><span>Tournament title</span><input id="event-title" required></label>
-            <label><span>Eyebrow</span><input id="event-eyebrow"></label>
-            <label class="form-grid__wide"><span>Intro line</span><textarea id="event-subtitle" rows="3"></textarea></label>
-            <label><span>Date label</span><input id="event-date"></label>
-            <label><span>Location</span><input id="event-location"></label>
-            <label class="form-grid__wide"><span>Status</span><input id="event-status" placeholder="Round of 16 underway"></label>
-            <div class="form-grid__wide"><button class="button button--primary" type="submit">Save event details</button></div>
+        <article class="admin-card schedule-generator-card">
+          <header><p>Automatic setup</p><h2>Generate the timetable</h2></header>
+          <form class="form-grid" data-schedule-generator>
+            <label><span>Tournament start date</span><input id="schedule-start-date" type="date" required></label>
+            <label><span>First match time</span><input id="schedule-start-time" type="time" value="12:00" required></label>
+            <label><span>Minutes per match</span><input id="schedule-duration" type="number" min="5" step="5" value="15" required></label>
+            <label><span>Foosball tables</span><input id="schedule-tables" type="number" min="1" step="1" value="1" required></label>
+            <label><span>Break between rounds</span><input id="schedule-round-break" type="number" min="0" step="5" value="10" required></label>
+            <div class="form-grid__wide"><button class="button button--primary" type="submit">Generate date slots</button></div>
           </form>
         </article>
 
-        <article class="admin-card admin-card--players">
-          <header class="admin-card__split"><div><p>Draw desk</p><h2>Players & seeding</h2></div><button class="button button--ghost button--small" type="button" data-add-player>Add player</button></header>
-          <p class="admin-card__note">Changing player order or details resets match results so the bracket cannot keep an invalid winner.</p>
-          <div class="player-editor-head" aria-hidden="true"><span>No.</span><span>Flag</span><span>Name</span><span>Nation</span><span>Order</span></div>
-          <div class="player-editor" data-player-editor></div>
-          <div class="admin-card__actions">
-            <button class="button button--primary" type="button" data-save-players>Save players & reset draw</button>
-            <button class="button button--ghost" type="button" data-shuffle>Randomize draw</button>
-          </div>
+        <div class="schedule-editor" data-schedule-editors></div>
+        <div class="schedule-save-bar">
+          <p>Review the generated timetable and edit any slot before saving.</p>
+          <button class="button button--primary" type="button" data-save-schedule>Save schedule changes</button>
+        </div>
+      </section>
+
+      <section class="admin-panel" data-tab-panel="setup">
+        <div class="admin-grid admin-grid--setup">
+          <article class="admin-card">
+            <header><p>Public page</p><h2>Event details</h2></header>
+            <form class="form-grid" data-event-form>
+              <label><span>Tournament title</span><input id="event-title" required></label>
+              <label><span>Eyebrow</span><input id="event-eyebrow"></label>
+              <label class="form-grid__wide"><span>Intro line</span><textarea id="event-subtitle" rows="3"></textarea></label>
+              <label><span>Date label</span><input id="event-date"></label>
+              <label><span>Location</span><input id="event-location"></label>
+              <label class="form-grid__wide"><span>Status</span><input id="event-status" placeholder="Opening round underway"></label>
+              <div class="form-grid__wide"><button class="button button--primary" type="submit">Save event details</button></div>
+            </form>
+          </article>
+
+          <article class="admin-card admin-card--players">
+            <header class="admin-card__split"><div><p>Draw desk</p><h2>Players & seeding</h2></div><button class="button button--ghost button--small" type="button" data-add-player>Add player</button></header>
+            <p class="admin-card__note">Changing player order or details resets match results so the bracket cannot keep an invalid winner.</p>
+            <div class="player-editor-head" aria-hidden="true"><span>No.</span><span>Flag</span><span>Name</span><span>Nation</span><span>Order</span></div>
+            <div class="player-editor" data-player-editor></div>
+            <div class="admin-card__actions">
+              <button class="button button--primary" type="button" data-save-players>Save players & reset draw</button>
+              <button class="button button--ghost" type="button" data-shuffle>Randomize draw</button>
+            </div>
+          </article>
+        </div>
+
+        <div class="admin-grid admin-grid--tools">
+          <article class="admin-card">
+            <header><p>Admin access</p><h2>Change password</h2></header>
+            <p class="admin-card__lead">Choose a new password for this browser. The new password takes effect the next time the desk is locked.</p>
+            <form class="form-grid" data-password-form>
+              <label class="form-grid__wide"><span>Current password</span><input type="password" data-current-password autocomplete="current-password" required></label>
+              <label><span>New password</span><input type="password" data-new-password autocomplete="new-password" minlength="8" required></label>
+              <label><span>Confirm new password</span><input type="password" data-confirm-password autocomplete="new-password" minlength="8" required></label>
+              <div class="form-grid__wide"><button class="button button--primary" type="submit">Update password</button></div>
+            </form>
+          </article>
+
+          <article class="admin-card">
+            <header><p>Data tools</p><h2>Backup or restore</h2></header>
+            <p class="admin-card__lead">Download a copy of the current tournament or restore a previously downloaded data file.</p>
+            <div class="admin-card__actions">
+              <button class="button button--primary" type="button" data-download>Download backup</button>
+              <label class="button button--ghost file-button">Restore backup<input type="file" accept="application/json,.json" data-import hidden></label>
+            </div>
+          </article>
+        </div>
+
+        <article class="danger-zone">
+          <div><p>Local reset</p><h3>Start over from the original draw</h3><span>This clears all saved results, dates, and setup changes on this browser.</span></div>
+          <button class="button button--danger" type="button" data-reset>Reset tournament</button>
         </article>
-      </div>
-    </section>
-
-    <section class="admin-panel" data-tab-panel="publish">
-      <div class="admin-grid">
-        <article class="admin-card">
-          <header><p>Live publishing</p><h2>Connect GitHub</h2></header>
-          <p class="admin-card__lead">The token stays in this browser. Use a fine-grained token limited to this repository with <strong>Contents: Read and write</strong>.</p>
-          <div class="form-grid">
-            <label><span>Repository owner</span><input id="github-owner" placeholder="your-github-name" autocomplete="off"></label>
-            <label><span>Repository name</span><input id="github-repo" placeholder="nations-cup" autocomplete="off"></label>
-            <label><span>Branch</span><input id="github-branch" value="main" autocomplete="off"></label>
-            <label><span>Data file path</span><input id="github-path" value="tournament-data.json" autocomplete="off"></label>
-            <label class="form-grid__wide"><span>Fine-grained personal access token</span><input id="github-token" type="password" placeholder="github_pat_…" autocomplete="off"></label>
-            <label class="checkbox form-grid__wide"><input id="remember-token" type="checkbox"><span>Remember the token on this device. Leave unchecked on a shared computer.</span></label>
-          </div>
-          <div class="admin-card__actions">
-            <button class="button button--primary" type="button" data-publish>Publish live results</button>
-            <button class="button button--ghost" type="button" data-download>Download data file instead</button>
-          </div>
-        </article>
-
-        <aside class="admin-card admin-card--guide">
-          <header><p>First-time setup</p><h2>Three steps</h2></header>
-          <ol class="setup-list">
-            <li><span>01</span><div><strong>Create the repository</strong><p>Upload every file in this project and enable GitHub Pages from the main branch.</p></div></li>
-            <li><span>02</span><div><strong>Create a limited token</strong><p>Select only this repository and grant repository Contents read/write access.</p></div></li>
-            <li><span>03</span><div><strong>Publish after each result</strong><p>The control room commits tournament-data.json. The public bracket refreshes automatically.</p></div></li>
-          </ol>
-          <div class="security-note"><strong>Important</strong><p>This page is not a secure login system. Keep the admin URL private and never commit your token into the project files.</p></div>
-        </aside>
-      </div>
-
-      <article class="danger-zone">
-        <div><p>Local reset</p><h3>Start over from the original draw</h3><span>This only resets the browser preview. It does not publish until you press Publish.</span></div>
-        <button class="button button--danger" type="button" data-reset>Reset tournament</button>
-      </article>
-    </section>
-  </main>
+      </section>
+    </main>
+  </div>
 
   <script src="assets/js/tournament.js"></script>
   <script src="assets/js/admin.js"></script>
