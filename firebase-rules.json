@@ -1,0 +1,11 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "tournament": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == 'admin@nationscup.app'",
+      ".validate": "newData.hasChildren(['version', 'settings', 'players'])"
+    }
+  }
+}

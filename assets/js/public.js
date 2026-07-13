@@ -2,6 +2,7 @@
   'use strict';
 
   let currentData = null;
+  let stopLiveUpdates = null;
 
   function playerRow(player, match, side) {
     const isWinner = Boolean(match.winner && player && match.winner.id === player.id);
@@ -250,6 +251,21 @@
     initNavigation();
     initBracketControls();
     await refresh();
-    window.setInterval(refresh, 30000);
+
+    if (window.LiveData?.isConfigured()) {
+      stopLiveUpdates = window.LiveData.subscribeTournament((data) => {
+        const normalized = Tournament.normalizeData(data);
+        if (JSON.stringify(normalized) !== JSON.stringify(currentData)) render(normalized);
+      }, (error) => {
+        if (String(error?.message || '') !== 'LIVE_STREAM_RECONNECTING') {
+          console.warn('Live tournament stream interrupted.', error);
+        }
+      });
+      window.setInterval(refresh, 60000);
+    } else {
+      window.setInterval(refresh, 30000);
+    }
   });
+
+  window.addEventListener('beforeunload', () => stopLiveUpdates?.());
 }());

@@ -1,21 +1,34 @@
 (function () {
   'use strict';
 
-  const AUTH_SESSION_KEY = 'nations-cup-admin-auth-v1';
-  const PASSWORD_HASH_KEY = 'nations-cup-admin-password-hash-v1';
-  const DEFAULT_PASSWORD = 'NationsCup13!';
-  const DEFAULT_PASSWORD_HASH = '3ce85bd40eef318be7ef579413331344bd32125866b0e671c66275412a07504d';
   let workingData = null;
   let appInitialized = false;
+  let liveSaveChain = Promise.resolve();
 
   const qs = (selector, scope = document) => scope.querySelector(selector);
   const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
-  function markDirty(message = 'Changes saved on this device.') {
+  function publishLive(message) {
+    const snapshot = Tournament.normalizeData(workingData);
+    Tournament.savePreview(snapshot);
+
+    if (!window.LiveData?.isConfigured()) {
+      setStatus('Live publishing is not configured yet. Complete the one-time Firebase setup in assets/js/live-config.js.', 'error');
+      return;
+    }
+
+    setStatus('Publishing the latest change…', 'neutral');
+    liveSaveChain = liveSaveChain
+      .catch(() => undefined)
+      .then(() => window.LiveData.saveTournament(snapshot))
+      .then(() => setStatus(`${message} The public page is now updated.`, 'success'))
+      .catch((error) => setStatus(`The change was kept locally, but the public page could not update: ${window.LiveData.friendlyError(error)}`, 'error'));
+  }
+
+  function markDirty(message = 'Changes saved.') {
     workingData.settings.updatedAt = new Date().toISOString();
-    Tournament.savePreview(workingData);
-    setStatus(message, 'success');
     renderSummary();
+    publishLive(message);
   }
 
   function setStatus(message, type = 'neutral') {
@@ -411,31 +424,13 @@
     try {
       const parsed = JSON.parse(await file.text());
       workingData = Tournament.normalizeData(parsed);
-      Tournament.savePreview(workingData);
       renderAll();
-      setStatus('Tournament backup restored successfully.', 'success');
+      markDirty('Tournament backup restored successfully.');
     } catch (error) {
       setStatus('That file is not a valid tournament backup.', 'error');
     } finally {
       event.currentTarget.value = '';
     }
-  }
-
-  async function hashPassword(value) {
-    if (!window.crypto?.subtle) return null;
-    const bytes = new TextEncoder().encode(value);
-    const digest = await window.crypto.subtle.digest('SHA-256', bytes);
-    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  function activePasswordHash() {
-    return localStorage.getItem(PASSWORD_HASH_KEY) || DEFAULT_PASSWORD_HASH;
-  }
-
-  async function passwordMatches(value) {
-    const hash = await hashPassword(value);
-    if (hash) return hash === activePasswordHash();
-    return !localStorage.getItem(PASSWORD_HASH_KEY) && value === DEFAULT_PASSWORD;
   }
 
   async function changePassword(event) {
@@ -444,10 +439,6 @@
     const next = qs('[data-new-password]').value;
     const confirm = qs('[data-confirm-password]').value;
 
-    if (!(await passwordMatches(current))) {
-      setStatus('The current password is incorrect.', 'error');
-      return;
-    }
     if (next.length < 8) {
       setStatus('Use a password with at least eight characters.', 'error');
       return;
@@ -456,14 +447,15 @@
       setStatus('The new passwords do not match.', 'error');
       return;
     }
-    const nextHash = await hashPassword(next);
-    if (!nextHash) {
-      setStatus('Password changes require the site to be opened over HTTPS.', 'error');
-      return;
+
+    try {
+      setStatus('Updating the admin password…', 'neutral');
+      await window.LiveData.changePassword(current, next);
+      event.currentTarget.reset();
+      setStatus('Admin password updated. The new password works from every device.', 'success');
+    } catch (error) {
+      setStatus(`The password could not be changed: ${window.LiveData.friendlyError(error)}`, 'error');
     }
-    localStorage.setItem(PASSWORD_HASH_KEY, nextHash);
-    event.currentTarget.reset();
-    setStatus('Admin password updated. It will be required after you lock the desk.', 'success');
   }
 
   function showAdminApp() {
@@ -487,33 +479,32 @@
     const error = qs('[data-login-error]');
     const submit = event.currentTarget.querySelector('button[type="submit"]');
     submit.disabled = true;
-    submit.textContent = 'Checking…';
+    submit.textContent = 'Connecting…';
 
-    if (await passwordMatches(input.value)) {
-      sessionStorage.setItem(AUTH_SESSION_KEY, 'unlocked');
+    try {
+      await window.LiveData.signIn(input.value);
       error.textContent = '';
       showAdminApp();
       await initApp();
-    } else {
-      error.textContent = 'Incorrect password. Try again.';
+    } catch (loginError) {
+      error.textContent = window.LiveData?.friendlyError(loginError) || 'The live tournament could not be reached.';
       input.select();
+    } finally {
+      submit.disabled = false;
+      submit.textContent = 'Unlock tournament desk';
     }
-
-    submit.disabled = false;
-    submit.textContent = 'Unlock tournament desk';
   }
 
   function lockAdmin() {
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    window.LiveData?.signOut();
     showLogin();
   }
 
   function resetPreview() {
     Tournament.clearPreview();
     workingData = Tournament.normalizeData(Tournament.FALLBACK_DATA);
-    Tournament.savePreview(workingData);
     renderAll();
-    setStatus('Tournament reset to the original 13-player draw with three opening-round byes and no later byes.', 'success');
+    markDirty('Tournament reset to the original 13-player draw with three opening-round byes and no later byes.');
   }
 
   function initTabs() {
@@ -535,10 +526,32 @@
   async function initApp() {
     if (appInitialized) return;
     appInitialized = true;
-    workingData = await Tournament.loadData();
-    Tournament.savePreview(workingData);
+
+    let liveConnected = false;
+    let connectionError = null;
+    try {
+      const remoteData = await window.LiveData.loadTournament();
+      if (remoteData) {
+        workingData = Tournament.normalizeData(remoteData);
+      } else {
+        workingData = await Tournament.loadData({ useLive: false });
+        workingData.settings.updatedAt = new Date().toISOString();
+        await window.LiveData.saveTournament(workingData);
+      }
+      Tournament.savePreview(workingData);
+      liveConnected = true;
+    } catch (error) {
+      connectionError = error;
+      workingData = await Tournament.loadData({ useLive: false });
+    }
+
     initTabs();
     renderAll();
+    if (liveConnected) {
+      setStatus('Connected. Every saved change publishes directly to the public page.', 'success');
+    } else {
+      setStatus(`The desk opened with its local backup, but live publishing is unavailable: ${window.LiveData.friendlyError(connectionError)}`, 'error');
+    }
 
     qs('[data-event-form]')?.addEventListener('submit', saveEventSettings);
     qs('[data-schedule-generator]')?.addEventListener('submit', generateSchedule);
@@ -555,9 +568,22 @@
 
   document.addEventListener('DOMContentLoaded', async () => {
     qs('[data-login-form]')?.addEventListener('submit', unlockAdmin);
-    if (sessionStorage.getItem(AUTH_SESSION_KEY) === 'unlocked') {
-      showAdminApp();
-      await initApp();
+
+    if (!window.LiveData?.isConfigured()) {
+      showLogin();
+      qs('[data-login-error]').textContent = 'Complete the one-time Firebase setup in assets/js/live-config.js before signing in.';
+      return;
+    }
+
+    if (window.LiveData.hasSession()) {
+      try {
+        await window.LiveData.ensureToken();
+        showAdminApp();
+        await initApp();
+      } catch (error) {
+        window.LiveData.signOut();
+        showLogin();
+      }
     } else {
       showLogin();
     }

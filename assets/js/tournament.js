@@ -194,7 +194,18 @@
   }
 
   async function loadData(options = {}) {
+    const useLiveData = options.useLive !== false;
     const useLocalData = options.useLocal !== false;
+
+    if (useLiveData && window.LiveData?.isConfigured()) {
+      try {
+        const remote = await window.LiveData.loadTournament();
+        if (remote) return normalizeData(remote);
+      } catch (error) {
+        console.warn('Could not load the live tournament data.', error);
+      }
+    }
+
     if (useLocalData) {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {

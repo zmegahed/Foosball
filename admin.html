@@ -23,7 +23,7 @@
       <div class="admin-login__copy">
         <p class="eyebrow"><span class="eyebrow__dot"></span>Restricted access</p>
         <h1>Enter the desk.</h1>
-        <p>Use the tournament password to manage results, match slots, and the draw.</p>
+        <p>Use the tournament password to manage results, match slots, and the draw. Saved changes publish directly to the live page.</p>
       </div>
       <label class="admin-login__field">
         <span>Password</span>
@@ -49,7 +49,7 @@
         <div>
           <p class="eyebrow"><span class="eyebrow__dot"></span>Tournament management</p>
           <h1>Run the table.</h1>
-          <p>Enter scores, manage the draw, and assign every match date. Changes save automatically on this device.</p>
+          <p>Enter scores, manage the draw, and assign every match date. Every saved change publishes immediately to the public page.</p>
         </div>
         <div class="admin-summary">
           <div><span data-summary-players>13</span><small>Players</small></div>
@@ -59,7 +59,7 @@
         </div>
       </section>
 
-      <div class="admin-status" data-admin-status data-type="neutral">Changes save automatically and appear on the public page in this browser.</div>
+      <div class="admin-status" data-admin-status data-type="neutral">Connected changes publish immediately to the public tournament page.</div>
 
       <nav class="admin-tabs" aria-label="Tournament desk sections">
         <button class="is-active" type="button" data-tab-button="results">Results</button>
@@ -130,7 +130,7 @@
         <div class="admin-grid admin-grid--tools">
           <article class="admin-card">
             <header><p>Admin access</p><h2>Change password</h2></header>
-            <p class="admin-card__lead">Choose a new password for this browser. The new password takes effect the next time the desk is locked.</p>
+            <p class="admin-card__lead">Choose a new tournament password. It will work on every device the next time the desk is opened.</p>
             <form class="form-grid" data-password-form>
               <label class="form-grid__wide"><span>Current password</span><input type="password" data-current-password autocomplete="current-password" required></label>
               <label><span>New password</span><input type="password" data-new-password autocomplete="new-password" minlength="8" required></label>
@@ -150,13 +150,15 @@
         </div>
 
         <article class="danger-zone">
-          <div><p>Local reset</p><h3>Start over from the original draw</h3><span>This clears all saved results, dates, and setup changes on this browser.</span></div>
+          <div><p>Live reset</p><h3>Start over from the original draw</h3><span>This clears the shared results, dates, and setup changes for every visitor.</span></div>
           <button class="button button--danger" type="button" data-reset>Reset tournament</button>
         </article>
       </section>
     </main>
   </div>
 
+  <script src="assets/js/live-config.js"></script>
+  <script src="assets/js/live-data.js"></script>
   <script src="assets/js/tournament.js"></script>
   <script src="assets/js/admin.js"></script>
 </body>

@@ -1,6 +1,20 @@
-# Nations Cup — GitHub Pages Website
+# Nations Cup — Live GitHub Pages Website
 
-A responsive 13-player foosball tournament hub with a public bracket, match schedule, player roster, and password-gated tournament desk.
+A responsive 13-player foosball tournament hub with a public bracket, match schedule, player roster, and password-gated admin page.
+
+## What changed
+
+The site now uses Firebase Realtime Database for shared tournament data.
+
+After the one-time Firebase connection is completed:
+
+- Open `admin.html`
+- Enter only the tournament password
+- Save a score, schedule, player, draw, or event change
+- The public page updates immediately for every visitor
+- No repository owner, repository name, GitHub token, JSON download, or GitHub file replacement is required
+
+The public homepage contains no admin link or admin instructions. Access the management page manually at `/admin.html`.
 
 ## Tournament format
 
@@ -9,42 +23,107 @@ A responsive 13-player foosball tournament hub with a public bracket, match sche
 - Three opening-round byes
 - Eight players in the quarterfinals
 - No byes after the opening round
-- Winners advance automatically after a score is saved
+- Winners advance automatically after a non-tied score is saved
 
-## Publish on GitHub Pages
+# One-time live setup
 
-1. Create a new GitHub repository.
+GitHub Pages hosts static HTML, CSS, and JavaScript, so a small database is required to save shared results. This package is already coded for Firebase; you only need to connect your own free Firebase project once.
+
+## 1. Create a Firebase project
+
+1. Open <https://console.firebase.google.com/>.
+2. Select **Create a project**.
+3. Google Analytics is not required for this tournament site.
+
+## 2. Create the live database
+
+1. Inside the Firebase project, open **Build → Realtime Database**.
+2. Select **Create Database**.
+3. Choose the database region closest to you.
+4. Start in locked mode.
+5. Open the **Rules** tab.
+6. Replace the rules with the contents of `firebase-rules.json` from this package.
+7. Select **Publish**.
+
+These rules allow everyone to view tournament data but only the authenticated `admin@nationscup.app` account to change it.
+
+## 3. Create the admin password
+
+1. Open **Build → Authentication**.
+2. Select **Get started**.
+3. Under **Sign-in method**, enable **Email/Password**.
+4. Open the **Users** tab and select **Add user**.
+5. Use this email exactly:
+
+```text
+admin@nationscup.app
+```
+
+6. Choose the password you want to enter on `admin.html`.
+
+The email is hidden inside the site configuration. The admin screen asks only for the password.
+
+## 4. Copy the Firebase connection values
+
+1. Open **Project settings → General**.
+2. Under **Your apps**, add a Web app using the `</>` button if one does not exist.
+3. Copy the value labeled `apiKey` from the Firebase configuration.
+4. Return to **Realtime Database** and copy the database URL shown at the top of the Data tab. It normally resembles:
+
+```text
+https://your-project-id-default-rtdb.firebaseio.com
+```
+
+## 5. Complete `assets/js/live-config.js`
+
+Open `assets/js/live-config.js` and change:
+
+```js
+window.NATIONS_CUP_LIVE = {
+  enabled: true,
+  firebaseApiKey: 'YOUR_REAL_FIREBASE_WEB_API_KEY',
+  databaseURL: 'https://your-project-id-default-rtdb.firebaseio.com',
+  adminEmail: 'admin@nationscup.app',
+  dataPath: 'tournament'
+};
+```
+
+Do not put the admin password in this file. The Firebase Web API key is an app configuration value; write access is protected by Firebase Authentication and the database rules.
+
+## 6. Publish on GitHub Pages
+
+1. Create a GitHub repository.
 2. Upload every file and folder from this package to the repository root.
 3. Open **Settings → Pages**.
 4. Select **Deploy from a branch**.
 5. Choose the `main` branch and `/ (root)` folder.
 6. Open the GitHub Pages address shown by GitHub.
 
-The public tournament page is the repository’s main URL.
+Public page:
 
-The private management page is available only by typing:
+```text
+https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/
+```
+
+Admin page:
 
 ```text
 https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/admin.html
 ```
 
-There is no admin link or management wording on the public homepage.
+## First admin login
 
-## Admin password
-
-The initial password is:
-
-```text
-NationsCup13!
-```
-
-Open `admin.html`, enter that password, and manage the tournament. The desk remains unlocked for the current browser session until **Lock desk** is pressed or the session ends.
-
-A replacement password can be set under **Tournament setup → Admin access**. Because GitHub Pages is static, a password changed through the page applies only to that browser. The built-in password gate is a convenience barrier, not server-side authentication.
+The first successful admin login uploads the original 13-player tournament data to Firebase automatically. After that, the public page reads from Firebase and receives live updates.
 
 ## Enter results
 
-Open **Results**, enter both scores, and press **Save result**. Ties are blocked. The winner is placed into the correct next-round match automatically.
+1. Open `admin.html`.
+2. Enter the Firebase admin password.
+3. Open **Results**.
+4. Enter both scores.
+5. Select **Save result**.
+
+Tied scores are blocked. The winner advances automatically, the shared database is updated, and connected public pages refresh immediately.
 
 ## Create date slots
 
@@ -56,27 +135,26 @@ Open **Schedule** and set:
 - Number of foosball tables
 - Break between rounds
 
-Press **Generate date slots**. The site creates all 12 playable match slots and skips the three opening-round byes. Every date, time, and table can be edited individually.
+Select **Generate date slots**. The site creates all 12 playable match slots and excludes the three opening-round byes. Every date, time, and table can be edited individually.
 
-## How saving works
+## Change the password
 
-Changes save automatically in the current browser and appear on the public page when it is opened in that same browser.
+Open **Tournament setup → Admin access**. The new password is changed through Firebase and works on every device.
 
-GitHub Pages cannot securely update shared website files using only a browser password. To make the latest results visible to visitors on every device without entering repository credentials in the site:
+## Backup and restore
 
-1. Open **Tournament setup → Data tools**.
-2. Press **Download backup**.
-3. Replace `tournament-data.json` in the GitHub repository with the downloaded file.
-
-The **Restore backup** button can load that file on another device.
+The backup tools remain available for safety. Restoring a backup publishes the restored data to the live public page automatically.
 
 ## Files
 
 - `index.html` — public tournament hub
 - `admin.html` — password-gated tournament desk
-- `tournament-data.json` — shared starting data
-- `assets/js/tournament.js` — bracket and storage engine
-- `assets/js/public.js` — public page rendering
-- `assets/js/admin.js` — password gate, score entry, scheduling, and setup
+- `tournament-data.json` — original fallback data
+- `firebase-rules.json` — secure public-read/authenticated-write rules
+- `assets/js/live-config.js` — one-time Firebase connection values
+- `assets/js/live-data.js` — authentication, shared saving, and live updates
+- `assets/js/tournament.js` — bracket and data engine
+- `assets/js/public.js` — public page rendering and live listener
+- `assets/js/admin.js` — password login, score entry, scheduling, and live publishing
 - `assets/css/styles.css` — public styles
 - `assets/css/admin.css` — admin and login styles
