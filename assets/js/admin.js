@@ -4,6 +4,7 @@
   let workingData = null;
   let appInitialized = false;
   let liveSaveChain = Promise.resolve();
+  let loginBusy = false;
 
   const qs = (selector, scope = document) => scope.querySelector(selector);
   const qsa = (selector, scope = document) => [...scope.querySelectorAll(selector)];
@@ -474,22 +475,47 @@
   }
 
   async function unlockAdmin(event) {
-    event.preventDefault();
+    event?.preventDefault?.();
+    if (loginBusy) return;
+
+    const form = qs('[data-login-form]');
     const input = qs('[data-login-password]');
     const error = qs('[data-login-error]');
-    const submit = event.currentTarget.querySelector('button[type="submit"]');
+    const submit = qs('[data-login-submit]', form);
+    const password = input?.value || '';
+
+    if (!window.LiveData?.isConfigured()) {
+      error.textContent = 'Firebase is not connected. Set enabled to true and add the API key and database URL in assets/js/live-config.js.';
+      return;
+    }
+
+    if (!password) {
+      error.textContent = 'Enter the tournament password.';
+      input?.focus();
+      return;
+    }
+
+    loginBusy = true;
+    error.textContent = 'Checking password…';
+    error.dataset.state = 'loading';
     submit.disabled = true;
-    submit.textContent = 'Connecting…';
+    submit.textContent = 'Opening dashboard…';
 
     try {
-      await window.LiveData.signIn(input.value);
+      await window.LiveData.signIn(password);
       error.textContent = '';
+      delete error.dataset.state;
       showAdminApp();
+      window.location.hash = 'dashboard';
+      window.scrollTo({ top: 0, behavior: 'instant' });
       await initApp();
     } catch (loginError) {
+      showLogin();
       error.textContent = window.LiveData?.friendlyError(loginError) || 'The live tournament could not be reached.';
-      input.select();
+      error.dataset.state = 'error';
+      input?.select();
     } finally {
+      loginBusy = false;
       submit.disabled = false;
       submit.textContent = 'Unlock tournament desk';
     }
@@ -567,7 +593,13 @@
   }
 
   document.addEventListener('DOMContentLoaded', async () => {
-    qs('[data-login-form]')?.addEventListener('submit', unlockAdmin);
+    const loginForm = qs('[data-login-form]');
+    const loginButton = qs('[data-login-submit]');
+    loginForm?.addEventListener('submit', unlockAdmin);
+    loginButton?.addEventListener('click', (event) => {
+      if (event.detail === 0) return;
+      unlockAdmin(event);
+    });
 
     if (!window.LiveData?.isConfigured()) {
       showLogin();

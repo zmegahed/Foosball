@@ -59,6 +59,24 @@
     sessionStorage.removeItem(SESSION_KEY);
   }
 
+
+  async function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      return await fetch(url, { ...options, signal: controller.signal });
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        const timeoutError = new Error('CONNECTION_TIMEOUT');
+        timeoutError.code = 'CONNECTION_TIMEOUT';
+        throw timeoutError;
+      }
+      throw error;
+    } finally {
+      window.clearTimeout(timer);
+    }
+  }
+
   function hasSession() {
     const session = readSession();
     return Boolean(session?.idToken || session?.refreshToken);
@@ -78,7 +96,7 @@
 
   async function signIn(password) {
     if (!isConfigured()) throw new Error('LIVE_CONNECTION_NOT_CONFIGURED');
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(config().firebaseApiKey)}`, {
+    const response = await fetchWithTimeout(`https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${encodeURIComponent(config().firebaseApiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -91,7 +109,7 @@
   }
 
   async function refreshSession(refreshToken) {
-    const response = await fetch(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(config().firebaseApiKey)}`, {
+    const response = await fetchWithTimeout(`https://securetoken.googleapis.com/v1/token?key=${encodeURIComponent(config().firebaseApiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
@@ -119,13 +137,13 @@
 
   async function loadTournament() {
     if (!isConfigured()) return null;
-    const response = await fetch(`${databaseEndpoint()}?v=${Date.now()}`, { cache: 'no-store' });
+    const response = await fetchWithTimeout(`${databaseEndpoint()}?v=${Date.now()}`, { cache: 'no-store' });
     return readJSON(response);
   }
 
   async function saveTournament(data) {
     const idToken = await ensureToken();
-    const response = await fetch(databaseEndpoint(idToken), {
+    const response = await fetchWithTimeout(databaseEndpoint(idToken), {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data)
@@ -136,7 +154,7 @@
   async function changePassword(currentPassword, nextPassword) {
     await signIn(currentPassword);
     const idToken = await ensureToken();
-    const response = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${encodeURIComponent(config().firebaseApiKey)}`, {
+    const response = await fetchWithTimeout(`https://identitytoolkit.googleapis.com/v1/accounts:update?key=${encodeURIComponent(config().firebaseApiKey)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ idToken, password: nextPassword, returnSecureToken: true })
@@ -212,7 +230,13 @@
       USER_DISABLED: 'The Firebase admin account is disabled.',
       OPERATION_NOT_ALLOWED: 'Email/password login is not enabled in Firebase.',
       PERMISSION_DENIED: 'Firebase blocked the update. Check the database rules.',
-      NETWORK_REQUEST_FAILED: 'The live database could not be reached.'
+      NETWORK_REQUEST_FAILED: 'The live database could not be reached.',
+      CONNECTION_TIMEOUT: 'Firebase did not respond. Check the API key, internet connection, and Firebase project status.',
+      API_KEY_INVALID: 'The Firebase Web API key is invalid.',
+      CONFIGURATION_NOT_FOUND: 'Firebase Authentication is not configured for this project.',
+      PROJECT_NOT_FOUND: 'The Firebase project could not be found.',
+      TOO_MANY_ATTEMPTS_TRY_LATER: 'Firebase temporarily blocked repeated login attempts. Try again later.',
+      MISSING_PASSWORD: 'Enter the tournament password.'
     };
     return messages[code] || code.replaceAll('_', ' ').toLowerCase();
   }
