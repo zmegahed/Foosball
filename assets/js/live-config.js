@@ -9,7 +9,7 @@
  * After this file is configured, admin.html only asks for the password.
  */
 window.NATIONS_CUP_LIVE = {
-  enabled: false,
+  enabled: true,
   firebaseApiKey: 'AIzaSyAwt236mcUv9HkWtVI55ppIYA6yKqOL52s',
   databaseURL: 'https://foosball-nations-cup-default-rtdb.europe-west1.firebasedatabase.app/',
   adminEmail: 'admin@nationscup.app',
