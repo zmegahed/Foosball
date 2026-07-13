@@ -15,7 +15,7 @@
 <body class="admin-body admin-body--locked">
   <section class="admin-login" data-login-screen>
     <div class="admin-login__court" aria-hidden="true"><span></span><span></span><span></span></div>
-    <form class="admin-login__card" data-login-form>
+    <div class="admin-login__card" data-login-form>
       <a class="brand" href="index.html" aria-label="Return to Nations Cup">
         <span class="brand__ball"></span>
         <span><strong>Nations Cup</strong><small>Tournament desk</small></span>
@@ -30,9 +30,9 @@
         <input type="password" autocomplete="current-password" data-login-password required autofocus>
       </label>
       <p class="admin-login__error" data-login-error role="alert" aria-live="polite"></p>
-      <button class="button button--primary" type="submit" data-login-submit>Unlock tournament desk</button>
+      <button class="button button--primary" type="button" data-login-submit>Unlock tournament desk</button>
       <a class="admin-login__back" href="index.html">← Return to tournament</a>
-    </form>
+    </div>
   </section>
 
   <div data-admin-app hidden>
@@ -157,9 +157,47 @@
     </main>
   </div>
 
-  <script src="assets/js/tournament.js"></script>
-  <script src="assets/js/live-config.js"></script>
-  <script src="assets/js/live-data.js"></script>
-  <script src="assets/js/admin.js"></script>
+  <script src="assets/js/tournament.js?v=20260712-3"></script>
+  <script src="assets/js/live-config.js?v=20260712-3"></script>
+  <script src="assets/js/live-data.js?v=20260712-3"></script>
+  <script src="assets/js/admin.js?v=20260712-3"></script>
+  <script>
+    (function () {
+      'use strict';
+      const button = document.querySelector('[data-login-submit]');
+      const input = document.querySelector('[data-login-password]');
+      const error = document.querySelector('[data-login-error]');
+
+      async function runLogin(event) {
+        event?.preventDefault?.();
+        if (typeof window.NationsCupAdminLogin !== 'function') {
+          error.textContent = 'The admin script did not load. Check that assets/js/admin.js exists in GitHub and reload the page.';
+          error.dataset.state = 'error';
+          return;
+        }
+        try {
+          await window.NationsCupAdminLogin(event);
+        } catch (loginError) {
+          error.textContent = 'Login could not start: ' + (loginError?.message || String(loginError));
+          error.dataset.state = 'error';
+        }
+      }
+
+      button.addEventListener('click', function (event) { runLogin(event); });
+      input.addEventListener('keydown', function (event) {
+        if (event.key === 'Enter') {
+          event.preventDefault();
+          runLogin(event);
+        }
+      });
+
+      window.addEventListener('error', function (event) {
+        if (!error.textContent) {
+          error.textContent = 'A page script failed to load: ' + (event.message || 'unknown error') + '.';
+          error.dataset.state = 'error';
+        }
+      });
+    }());
+  </script>
 </body>
 </html>

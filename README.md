@@ -158,3 +158,26 @@ The backup tools remain available for safety. Restoring a backup publishes the r
 - `assets/js/admin.js` — password login, score entry, scheduling, and live publishing
 - `assets/css/styles.css` — public styles
 - `assets/css/admin.css` — admin and login styles
+
+
+## Troubleshooting
+
+### Password form reloads instead of opening the desk
+
+Confirm that both `admin.html` and `index.html` load these scripts in this order:
+
+```html
+<script src="assets/js/tournament.js"></script>
+<script src="assets/js/live-config.js"></script>
+<script src="assets/js/live-data.js"></script>
+```
+
+The admin page then loads `assets/js/admin.js`, while the public page loads `assets/js/public.js`. The login form also includes a no-reload fallback.
+
+## Admin login build
+
+This package already contains the configured Firebase connection supplied for the project.
+Upload the entire package together so `admin.html`, `assets/js/admin.js`, `assets/js/live-data.js`, and `assets/js/live-config.js` stay on the same build.
+
+On `admin.html`, the login screen should display `Admin build 2026.07.12.3` and `Firebase connection found. Enter your tournament password.` before login.
+If either message is missing, GitHub Pages is serving an older or incomplete deployment.

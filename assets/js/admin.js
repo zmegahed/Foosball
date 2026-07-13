@@ -481,7 +481,7 @@
     const form = qs('[data-login-form]');
     const input = qs('[data-login-password]');
     const error = qs('[data-login-error]');
-    const submit = qs('[data-login-submit]', form);
+    const submit = qs('[data-login-submit]', form) || qs('[data-login-submit]');
     const password = input?.value || '';
 
     if (!window.LiveData?.isConfigured()) {
@@ -507,7 +507,7 @@
       delete error.dataset.state;
       showAdminApp();
       window.location.hash = 'dashboard';
-      window.scrollTo({ top: 0, behavior: 'instant' });
+      window.scrollTo({ top: 0, behavior: 'auto' });
       await initApp();
     } catch (loginError) {
       showLogin();
@@ -592,32 +592,43 @@
     qs('[data-lock-admin]')?.addEventListener('click', lockAdmin);
   }
 
-  document.addEventListener('DOMContentLoaded', async () => {
-    const loginForm = qs('[data-login-form]');
-    const loginButton = qs('[data-login-submit]');
-    loginForm?.addEventListener('submit', unlockAdmin);
-    loginButton?.addEventListener('click', (event) => {
-      if (event.detail === 0) return;
-      unlockAdmin(event);
-    });
+  window.NationsCupAdminLogin = unlockAdmin;
 
-    if (!window.LiveData?.isConfigured()) {
+  document.addEventListener('DOMContentLoaded', async () => {
+    const error = qs('[data-login-error]');
+
+    if (!window.LiveData) {
       showLogin();
-      qs('[data-login-error]').textContent = 'Complete the one-time Firebase setup in assets/js/live-config.js before signing in.';
+      error.textContent = 'The live connection script did not load. Replace assets/js/live-data.js and hard-refresh this page.';
+      error.dataset.state = 'error';
       return;
     }
+
+    if (!window.LiveData.isConfigured()) {
+      showLogin();
+      error.textContent = 'Firebase is not connected. In assets/js/live-config.js, set enabled to true and add your real API key and database URL.';
+      error.dataset.state = 'error';
+      return;
+    }
+
+    error.textContent = 'Firebase connection found. Enter your tournament password.';
+    error.dataset.state = 'ready';
 
     if (window.LiveData.hasSession()) {
       try {
         await window.LiveData.ensureToken();
         showAdminApp();
         await initApp();
-      } catch (error) {
+      } catch (sessionError) {
         window.LiveData.signOut();
         showLogin();
+        error.textContent = 'Your previous session expired. Enter the password again.';
+        error.dataset.state = 'error';
       }
     } else {
       showLogin();
+      error.textContent = 'Firebase connection found. Enter your tournament password.';
+      error.dataset.state = 'ready';
     }
   });
 }());
