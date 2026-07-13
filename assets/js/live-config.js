@@ -10,8 +10,8 @@
  */
 window.NATIONS_CUP_LIVE = {
   enabled: false,
-  firebaseApiKey: 'PASTE_FIREBASE_WEB_API_KEY',
-  databaseURL: 'https://YOUR-PROJECT-ID-default-rtdb.firebaseio.com',
+  firebaseApiKey: 'AIzaSyAwt236mcUv9HkWtVI55ppIYA6yKqOL52s',
+  databaseURL: 'https://foosball-nations-cup-default-rtdb.europe-west1.firebasedatabase.app/',
   adminEmail: 'admin@nationscup.app',
   dataPath: 'tournament'
 };
