@@ -1,14 +1,14 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'nations-cup-preview-data-v2';
+  const STORAGE_KEY = 'nations-cup-preview-data-v3';
 
   const FALLBACK_DATA = {
-    version: 2,
+    version: 3,
     settings: {
       title: 'Nations Cup',
       eyebrow: 'Office Foosball Tournament',
-      subtitle: 'One table. Fourteen players. One champion.',
+      subtitle: 'One table. Thirteen players. Twelve nations. One champion.',
       date: 'Tournament Day',
       location: 'Tournament HQ',
       status: 'Draw confirmed',
@@ -27,8 +27,7 @@
       { id: 'elizabeth', seed: 10, name: 'Elizabeth', nation: 'Spain', flag: '🇪🇸' },
       { id: 'kevin', seed: 11, name: 'Kevin', nation: 'Norway', flag: '🇳🇴' },
       { id: 'maureen', seed: 12, name: 'Maureen', nation: 'Argentina', flag: '🇦🇷' },
-      { id: 'kyle', seed: 13, name: 'Kyle', nation: 'Netherlands', flag: '🇳🇱' },
-      { id: 'player-14', seed: 14, name: 'Player 14', nation: 'Nation TBD', flag: '🌐' }
+      { id: 'kyle', seed: 13, name: 'Kyle', nation: 'Netherlands', flag: '🇳🇱' }
     ],
     results: {},
     schedule: {}
@@ -94,7 +93,7 @@
 
   function normalizeData(input) {
     const data = clone(input || FALLBACK_DATA);
-    data.version = 2;
+    data.version = 3;
     data.settings = { ...clone(FALLBACK_DATA.settings), ...(data.settings || {}) };
     data.players = Array.isArray(data.players) ? data.players : clone(FALLBACK_DATA.players);
     data.players = data.players.map((player, index) => ({

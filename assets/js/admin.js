@@ -502,7 +502,7 @@
     dirty = false;
     Tournament.savePreview(workingData);
     renderAll();
-    setStatus('Tournament reset to the original 14-player draw with two opening-round byes.', 'success');
+    setStatus('Tournament reset to the original 13-player draw with three opening-round byes and no later byes.', 'success');
   }
 
   function initTabs() {
@@ -528,9 +528,9 @@
     loadRepoSettings();
     renderAll();
 
-    qs('[data-event-form]').addEventListener('submit', saveEventSettings);
-    qs('[data-schedule-generator]').addEventListener('submit', generateSchedule);
-    qs('[data-save-schedule]').addEventListener('click', saveSchedule);
+    qs('[data-event-form]')?.addEventListener('submit', saveEventSettings);
+    qs('[data-schedule-generator]')?.addEventListener('submit', generateSchedule);
+    qs('[data-save-schedule]')?.addEventListener('click', saveSchedule);
     qs('[data-add-player]').addEventListener('click', addPlayer);
     qs('[data-save-players]').addEventListener('click', savePlayers);
     qs('[data-shuffle]').addEventListener('click', shuffleDraw);

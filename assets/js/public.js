@@ -86,6 +86,7 @@
 
   function renderSchedule(bracket) {
     const container = document.querySelector('[data-public-schedule]');
+    if (!container) return;
     const scheduled = bracket.rounds.flatMap((round) => round.matches
       .filter((match) => match.state !== 'bye' && (match.schedule?.date || match.schedule?.time || match.schedule?.table))
       .map((match) => ({ ...match, roundName: round.name })));
