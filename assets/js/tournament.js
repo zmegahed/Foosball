@@ -24,7 +24,7 @@
       { id: 'peter', seed: 7, name: 'Peter', nation: 'Japan', flag: '🇯🇵' },
       { id: 'cortez', seed: 8, name: 'Cortez', nation: 'United States', flag: '🇺🇸' },
       { id: 'dave', seed: 9, name: 'Dave', nation: 'United States', flag: '🇺🇸' },
-      { id: 'anuja', seed: 10, name: 'Anuja', nation: 'Senegal', flag: '🇸🇳' },
+      { id: 'elizabeth', seed: 10, name: 'Anuja', nation: 'Senegal', flag: '🇸🇳' },
       { id: 'kevin', seed: 11, name: 'Kevin', nation: 'Norway', flag: '🇳🇴' },
       { id: 'maureen', seed: 12, name: 'Maureen', nation: 'Argentina', flag: '🇦🇷' },
       { id: 'kyle', seed: 13, name: 'Kyle', nation: 'Netherlands', flag: '🇳🇱' }
