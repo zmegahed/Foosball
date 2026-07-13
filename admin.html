@@ -29,8 +29,8 @@
         <p>Enter scores, manage the draw, preview changes, then publish the shared tournament data directly to your GitHub repository.</p>
       </div>
       <div class="admin-summary">
-        <div><span data-summary-players>13</span><small>Players</small></div>
-        <div><span data-summary-byes>3</span><small>Byes</small></div>
+        <div><span data-summary-players>14</span><small>Players</small></div>
+        <div><span data-summary-byes>2</span><small>Opening byes</small></div>
         <div><span data-summary-results>0/0</span><small>Results</small></div>
         <div><span data-summary-champion>Pending</span><small>Champion</small></div>
       </div>
@@ -40,6 +40,7 @@
 
     <nav class="admin-tabs" aria-label="Control room sections">
       <button class="is-active" type="button" data-tab-button="results">Results</button>
+      <button type="button" data-tab-button="schedule">Schedule</button>
       <button type="button" data-tab-button="setup">Tournament setup</button>
       <button type="button" data-tab-button="publish">Publishing</button>
     </nav>
@@ -50,6 +51,31 @@
         <p>Save a non-tied score and the winner will automatically appear in the next round.</p>
       </header>
       <div data-match-editors></div>
+    </section>
+
+    <section class="admin-panel" data-tab-panel="schedule">
+      <header class="admin-panel__heading">
+        <div><p>Match planning</p><h2>Date & time slots</h2></div>
+        <p>Generate a complete timetable, then fine-tune any individual match. Opening-round byes are never assigned a time slot.</p>
+      </header>
+
+      <article class="admin-card schedule-generator-card">
+        <header><p>Fast setup</p><h2>Generate the timetable</h2></header>
+        <form class="form-grid" data-schedule-generator>
+          <label><span>Tournament start date</span><input id="schedule-start-date" type="date" required></label>
+          <label><span>First match time</span><input id="schedule-start-time" type="time" value="09:00" required></label>
+          <label><span>Minutes per match</span><input id="schedule-duration" type="number" min="5" step="5" value="20" required></label>
+          <label><span>Foosball tables available</span><input id="schedule-tables" type="number" min="1" max="8" step="1" value="1" required></label>
+          <label><span>Break between rounds</span><input id="schedule-round-break" type="number" min="0" step="5" value="15" required></label>
+          <div class="form-grid__wide"><button class="button button--primary" type="submit">Generate date slots</button></div>
+        </form>
+      </article>
+
+      <div class="schedule-editor" data-schedule-editors></div>
+      <div class="schedule-save-bar">
+        <p>Individual edits stay in your browser preview until you publish.</p>
+        <button class="button button--primary" type="button" data-save-schedule>Save schedule changes</button>
+      </div>
     </section>
 
     <section class="admin-panel" data-tab-panel="setup">
@@ -69,7 +95,7 @@
 
         <article class="admin-card admin-card--players">
           <header class="admin-card__split"><div><p>Draw desk</p><h2>Players & seeding</h2></div><button class="button button--ghost button--small" type="button" data-add-player>Add player</button></header>
-          <p class="admin-card__note">Changing player order or details resets match results so the bracket cannot keep an invalid winner.</p>
+          <p class="admin-card__note">This is set up as a 14-player draw. A 16-slot bracket requires two opening-round byes. Changing player order or details resets match results, but keeps the match date slots.</p>
           <div class="player-editor-head" aria-hidden="true"><span>No.</span><span>Flag</span><span>Name</span><span>Nation</span><span>Order</span></div>
           <div class="player-editor" data-player-editor></div>
           <div class="admin-card__actions">

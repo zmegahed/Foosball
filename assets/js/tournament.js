@@ -1,14 +1,14 @@
 (function () {
   'use strict';
 
-  const STORAGE_KEY = 'nations-cup-preview-data-v1';
+  const STORAGE_KEY = 'nations-cup-preview-data-v2';
 
   const FALLBACK_DATA = {
-    version: 1,
+    version: 2,
     settings: {
       title: 'Nations Cup',
       eyebrow: 'Office Foosball Tournament',
-      subtitle: 'One table. Thirteen players. Twelve nations. One champion.',
+      subtitle: 'One table. Fourteen players. One champion.',
       date: 'Tournament Day',
       location: 'Tournament HQ',
       status: 'Draw confirmed',
@@ -27,9 +27,11 @@
       { id: 'elizabeth', seed: 10, name: 'Elizabeth', nation: 'Spain', flag: '🇪🇸' },
       { id: 'kevin', seed: 11, name: 'Kevin', nation: 'Norway', flag: '🇳🇴' },
       { id: 'maureen', seed: 12, name: 'Maureen', nation: 'Argentina', flag: '🇦🇷' },
-      { id: 'kyle', seed: 13, name: 'Kyle', nation: 'Netherlands', flag: '🇳🇱' }
+      { id: 'kyle', seed: 13, name: 'Kyle', nation: 'Netherlands', flag: '🇳🇱' },
+      { id: 'player-14', seed: 14, name: 'Player 14', nation: 'Nation TBD', flag: '🌐' }
     ],
-    results: {}
+    results: {},
+    schedule: {}
   };
 
   function clone(value) {
@@ -81,8 +83,18 @@
     return `Round ${roundIndex + 1}`;
   }
 
+  function normalizeSchedule(schedule) {
+    if (!schedule || typeof schedule !== 'object') return {};
+    return Object.fromEntries(Object.entries(schedule).map(([key, slot]) => [key, {
+      date: String(slot?.date || ''),
+      time: String(slot?.time || ''),
+      table: String(slot?.table || '')
+    }]));
+  }
+
   function normalizeData(input) {
     const data = clone(input || FALLBACK_DATA);
+    data.version = 2;
     data.settings = { ...clone(FALLBACK_DATA.settings), ...(data.settings || {}) };
     data.players = Array.isArray(data.players) ? data.players : clone(FALLBACK_DATA.players);
     data.players = data.players.map((player, index) => ({
@@ -93,6 +105,7 @@
       flag: player.flag || '🌐'
     })).sort((a, b) => a.seed - b.seed);
     data.results = data.results && typeof data.results === 'object' ? data.results : {};
+    data.schedule = normalizeSchedule(data.schedule);
     return data;
   }
 
@@ -121,10 +134,12 @@
         let winner = null;
         let state = 'waiting';
 
-        if (playerA && !playerB) {
+        // Structural byes exist only in the opening round. A missing player in
+        // later rounds means an earlier match is unfinished, never a free pass.
+        if (roundIndex === 0 && playerA && !playerB) {
           winner = playerA;
           state = 'bye';
-        } else if (!playerA && playerB) {
+        } else if (roundIndex === 0 && !playerA && playerB) {
           winner = playerB;
           state = 'bye';
         } else if (playerA && playerB) {
@@ -154,7 +169,8 @@
           playerB,
           result,
           winner,
-          state
+          state,
+          schedule: data.schedule[key] || { date: '', time: '', table: '' }
         });
         winners.push(winner);
       }
@@ -221,6 +237,27 @@
     }).format(date);
   }
 
+  function dateFromSlot(slot) {
+    if (!slot?.date) return null;
+    const time = slot.time || '12:00';
+    const date = new Date(`${slot.date}T${time}:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  function formatScheduleDate(slot, options = {}) {
+    const date = dateFromSlot(slot);
+    if (!date) return '';
+    return new Intl.DateTimeFormat(undefined, options.compact
+      ? { month: 'short', day: 'numeric' }
+      : { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
+  }
+
+  function formatScheduleTime(slot) {
+    const date = dateFromSlot(slot);
+    if (!date || !slot?.time) return '';
+    return new Intl.DateTimeFormat(undefined, { hour: 'numeric', minute: '2-digit' }).format(date);
+  }
+
   function toBase64(value) {
     const bytes = new TextEncoder().encode(value);
     let binary = '';
@@ -243,6 +280,9 @@
     savePreview,
     clearPreview,
     formatUpdatedAt,
+    formatScheduleDate,
+    formatScheduleTime,
+    dateFromSlot,
     toBase64
   };
 }());

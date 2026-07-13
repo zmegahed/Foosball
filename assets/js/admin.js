@@ -49,6 +49,11 @@
           ${matchParticipant(match.playerA, 'A', match)}
           ${matchParticipant(match.playerB, 'B', match)}
         </div>
+        ${(match.schedule?.date || match.schedule?.time || match.schedule?.table) ? `
+          <div class="admin-match__slot">
+            <span>${Tournament.escapeHTML([Tournament.formatScheduleDate(match.schedule, { compact: true }), Tournament.formatScheduleTime(match.schedule)].filter(Boolean).join(' · ') || 'Time TBD')}</span>
+            <strong>${Tournament.escapeHTML(match.schedule.table || 'Table TBD')}</strong>
+          </div>` : ''}
         ${isPlayable ? `
           <div class="score-entry">
             <label>
@@ -83,7 +88,7 @@
       <section class="admin-round${index === 0 ? ' is-open' : ''}" data-admin-round>
         <button class="admin-round__toggle" type="button" aria-expanded="${index === 0 ? 'true' : 'false'}" data-round-toggle>
           <span><small>Round ${index + 1}</small>${round.name}</span>
-          <span>${round.matches.filter((match) => match.state === 'complete').length}/${round.matches.filter((match) => match.playerA && match.playerB).length} complete</span>
+          <span>${round.matches.filter((match) => match.state === 'complete').length}/${round.matches.filter((match) => match.state !== 'bye').length} complete</span>
         </button>
         <div class="admin-round__body">
           <div class="admin-match-grid">
@@ -100,6 +105,122 @@
 
     qsa('[data-save-result]', container).forEach((button) => button.addEventListener('click', saveResult));
     qsa('[data-clear-result]', container).forEach((button) => button.addEventListener('click', clearResult));
+  }
+
+  function scheduleParticipantLabel(match) {
+    const playerA = match.playerA?.name || 'TBD';
+    const playerB = match.playerB?.name || 'TBD';
+    return `${playerA} vs ${playerB}`;
+  }
+
+  function renderScheduleEditors() {
+    const container = qs('[data-schedule-editors]');
+    if (!container) return;
+    const bracket = Tournament.deriveBracket(workingData);
+    container.innerHTML = bracket.rounds.map((round) => {
+      const schedulableMatches = round.matches.filter((match) => match.state !== 'bye');
+      return `
+        <section class="schedule-editor-round">
+          <header>
+            <div><span>Round ${round.index + 1}</span><h3>${Tournament.escapeHTML(round.name)}</h3></div>
+            <strong>${schedulableMatches.length} ${schedulableMatches.length === 1 ? 'slot' : 'slots'}</strong>
+          </header>
+          <div class="schedule-editor-grid">
+            ${schedulableMatches.map((match) => `
+              <article class="schedule-slot-editor" data-schedule-key="${match.key}">
+                <div class="schedule-slot-editor__title">
+                  <span>Match ${String(match.number).padStart(2, '0')}</span>
+                  <strong>${Tournament.escapeHTML(scheduleParticipantLabel(match))}</strong>
+                </div>
+                <label><span>Date</span><input type="date" data-slot-date value="${Tournament.escapeHTML(match.schedule?.date || '')}"></label>
+                <label><span>Time</span><input type="time" data-slot-time value="${Tournament.escapeHTML(match.schedule?.time || '')}"></label>
+                <label class="schedule-slot-editor__table"><span>Table / court</span><input type="text" data-slot-table value="${Tournament.escapeHTML(match.schedule?.table || '')}" placeholder="Table 1"></label>
+              </article>`).join('')}
+          </div>
+        </section>`;
+    }).join('');
+  }
+
+  function syncScheduleFromEditor() {
+    const container = qs('[data-schedule-editors]');
+    if (!container) return;
+    const nextSchedule = { ...(workingData.schedule || {}) };
+    qsa('[data-schedule-key]', container).forEach((card) => {
+      const key = card.dataset.scheduleKey;
+      const slot = {
+        date: qs('[data-slot-date]', card).value,
+        time: qs('[data-slot-time]', card).value,
+        table: qs('[data-slot-table]', card).value.trim()
+      };
+      if (slot.date || slot.time || slot.table) nextSchedule[key] = slot;
+      else delete nextSchedule[key];
+    });
+    workingData.schedule = nextSchedule;
+  }
+
+  function saveSchedule() {
+    syncScheduleFromEditor();
+    markDirty('Match date and time slots saved to the browser preview.');
+    renderMatches();
+  }
+
+  function localDateValue(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  function localTimeValue(date) {
+    return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+  }
+
+  function generateSchedule(event) {
+    event.preventDefault();
+    const dateValue = qs('#schedule-start-date').value;
+    const timeValue = qs('#schedule-start-time').value;
+    const duration = Number(qs('#schedule-duration').value);
+    const tableCount = Number(qs('#schedule-tables').value);
+    const roundBreak = Number(qs('#schedule-round-break').value);
+
+    if (!dateValue || !timeValue || !Number.isFinite(duration) || duration < 5 || !Number.isInteger(tableCount) || tableCount < 1 || !Number.isFinite(roundBreak) || roundBreak < 0) {
+      setStatus('Add a valid start date, time, match duration, table count, and round break.', 'error');
+      return;
+    }
+
+    const start = new Date(`${dateValue}T${timeValue}:00`);
+    if (Number.isNaN(start.getTime())) {
+      setStatus('The schedule start date or time is invalid.', 'error');
+      return;
+    }
+
+    const bracket = Tournament.deriveBracket(workingData);
+    const generated = {};
+    let cursor = new Date(start);
+
+    bracket.rounds.forEach((round) => {
+      const matches = round.matches.filter((match) => match.state !== 'bye');
+      const roundStart = new Date(cursor);
+      matches.forEach((match, index) => {
+        const batch = Math.floor(index / tableCount);
+        const tableNumber = (index % tableCount) + 1;
+        const slotDate = new Date(roundStart.getTime() + (batch * duration * 60000));
+        generated[match.key] = {
+          date: localDateValue(slotDate),
+          time: localTimeValue(slotDate),
+          table: `Table ${tableNumber}`
+        };
+      });
+      const batches = Math.ceil(matches.length / tableCount);
+      cursor = new Date(roundStart.getTime() + ((batches * duration + roundBreak) * 60000));
+    });
+
+    workingData.schedule = generated;
+    workingData.settings.date = Tournament.formatScheduleDate({ date: dateValue });
+    markDirty('A complete tournament timetable was generated. Review the individual slots before publishing.');
+    renderEventForm();
+    renderScheduleEditors();
+    renderMatches();
   }
 
   function saveResult(event) {
@@ -134,6 +255,7 @@
     };
     markDirty(`${scoreA > scoreB ? match.playerA.name : match.playerB.name} advances. Preview updated.`);
     renderMatches();
+    renderScheduleEditors();
   }
 
   function clearResult(event) {
@@ -141,6 +263,7 @@
     delete workingData.results[key];
     markDirty('Result cleared. Any affected later-round result was also removed.');
     renderMatches();
+    renderScheduleEditors();
   }
 
   function renderEventForm() {
@@ -206,6 +329,7 @@
     markDirty(message);
     renderPlayersEditor();
     renderMatches();
+    renderScheduleEditors();
   }
 
   function movePlayer(button, direction) {
@@ -259,7 +383,7 @@
   function renderSummary() {
     const bracket = Tournament.deriveBracket(workingData);
     const completed = bracket.rounds.flatMap((round) => round.matches).filter((match) => match.state === 'complete').length;
-    const playable = bracket.rounds.flatMap((round) => round.matches).filter((match) => match.playerA && match.playerB).length;
+    const playable = bracket.rounds.flatMap((round) => round.matches).filter((match) => match.state !== 'bye').length;
     qs('[data-summary-players]').textContent = workingData.players.length;
     qs('[data-summary-byes]').textContent = bracket.byeCount;
     qs('[data-summary-results]').textContent = `${completed}/${playable}`;
@@ -310,6 +434,7 @@
 
     try {
       syncPlayersFromEditor();
+      syncScheduleFromEditor();
       workingData.settings.updatedAt = new Date().toISOString();
       const apiUrl = `https://api.github.com/repos/${encodeURIComponent(config.owner)}/${encodeURIComponent(config.repo)}/contents/${config.path.split('/').map(encodeURIComponent).join('/')}?ref=${encodeURIComponent(config.branch)}`;
       const headers = {
@@ -360,6 +485,7 @@
 
   function downloadData() {
     syncPlayersFromEditor();
+    syncScheduleFromEditor();
     workingData.settings.updatedAt = new Date().toISOString();
     const blob = new Blob([`${JSON.stringify(workingData, null, 2)}\n`], { type: 'application/json' });
     const link = document.createElement('a');
@@ -376,7 +502,7 @@
     dirty = false;
     Tournament.savePreview(workingData);
     renderAll();
-    setStatus('Tournament reset to the original 13-player draw.', 'success');
+    setStatus('Tournament reset to the original 14-player draw with two opening-round byes.', 'success');
   }
 
   function initTabs() {
@@ -391,6 +517,7 @@
     renderEventForm();
     renderPlayersEditor();
     renderMatches();
+    renderScheduleEditors();
     renderSummary();
   }
 
@@ -402,6 +529,8 @@
     renderAll();
 
     qs('[data-event-form]').addEventListener('submit', saveEventSettings);
+    qs('[data-schedule-generator]').addEventListener('submit', generateSchedule);
+    qs('[data-save-schedule]').addEventListener('click', saveSchedule);
     qs('[data-add-player]').addEventListener('click', addPlayer);
     qs('[data-save-players]').addEventListener('click', savePlayers);
     qs('[data-shuffle]').addEventListener('click', shuffleDraw);

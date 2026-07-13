@@ -1,9 +1,9 @@
 {
-  "version": 1,
+  "version": 2,
   "settings": {
     "title": "Nations Cup",
     "eyebrow": "Office Foosball Tournament",
-    "subtitle": "One table. Thirteen players. Twelve nations. One champion.",
+    "subtitle": "One table. Fourteen players. One champion.",
     "date": "Tournament Day",
     "location": "Tournament HQ",
     "status": "Draw confirmed",
@@ -22,7 +22,9 @@
     { "id": "elizabeth", "seed": 10, "name": "Elizabeth", "nation": "Spain", "flag": "🇪🇸" },
     { "id": "kevin", "seed": 11, "name": "Kevin", "nation": "Norway", "flag": "🇳🇴" },
     { "id": "maureen", "seed": 12, "name": "Maureen", "nation": "Argentina", "flag": "🇦🇷" },
-    { "id": "kyle", "seed": 13, "name": "Kyle", "nation": "Netherlands", "flag": "🇳🇱" }
+    { "id": "kyle", "seed": 13, "name": "Kyle", "nation": "Netherlands", "flag": "🇳🇱" },
+    { "id": "player-14", "seed": 14, "name": "Player 14", "nation": "Nation TBD", "flag": "🌐" }
   ],
-  "results": {}
+  "results": {},
+  "schedule": {}
 }
