@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10120f">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Nations Cup — Control Room</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <a class="brand" href="index.html"><span class="brand__ball"></span><span><strong>Nations Cup</strong><small>Control room</small></span></a>
+    <div class="admin-header__actions">
+      <a class="button button--ghost" href="index.html?preview=1" target="_blank" rel="noopener">Open preview</a>
+      <button class="button button--primary" type="button" data-publish>Publish live results</button>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <section class="admin-intro">
+      <div>
+        <p class="eyebrow"><span class="eyebrow__dot"></span>Tournament management</p>
+        <h1>Run the table.</h1>
+        <p>Enter scores, manage the draw, preview changes, then publish the shared tournament data directly to your GitHub repository.</p>
+      </div>
+      <div class="admin-summary">
+        <div><span data-summary-players>13</span><small>Players</small></div>
+        <div><span data-summary-byes>3</span><small>Byes</small></div>
+        <div><span data-summary-results>0/0</span><small>Results</small></div>
+        <div><span data-summary-champion>Pending</span><small>Champion</small></div>
+      </div>
+    </section>
+
+    <div class="admin-status" data-admin-status data-type="neutral">Changes are saved in this browser until you publish them.</div>
+
+    <nav class="admin-tabs" aria-label="Control room sections">
+      <button class="is-active" type="button" data-tab-button="results">Results</button>
+      <button type="button" data-tab-button="setup">Tournament setup</button>
+      <button type="button" data-tab-button="publish">Publishing</button>
+    </nav>
+
+    <section class="admin-panel is-active" data-tab-panel="results">
+      <header class="admin-panel__heading">
+        <div><p>Score desk</p><h2>Match results</h2></div>
+        <p>Save a non-tied score and the winner will automatically appear in the next round.</p>
+      </header>
+      <div data-match-editors></div>
+    </section>
+
+    <section class="admin-panel" data-tab-panel="setup">
+      <div class="admin-grid admin-grid--setup">
+        <article class="admin-card">
+          <header><p>Public page</p><h2>Event details</h2></header>
+          <form class="form-grid" data-event-form>
+            <label><span>Tournament title</span><input id="event-title" required></label>
+            <label><span>Eyebrow</span><input id="event-eyebrow"></label>
+            <label class="form-grid__wide"><span>Intro line</span><textarea id="event-subtitle" rows="3"></textarea></label>
+            <label><span>Date label</span><input id="event-date"></label>
+            <label><span>Location</span><input id="event-location"></label>
+            <label class="form-grid__wide"><span>Status</span><input id="event-status" placeholder="Round of 16 underway"></label>
+            <div class="form-grid__wide"><button class="button button--primary" type="submit">Save event details</button></div>
+          </form>
+        </article>
+
+        <article class="admin-card admin-card--players">
+          <header class="admin-card__split"><div><p>Draw desk</p><h2>Players & seeding</h2></div><button class="button button--ghost button--small" type="button" data-add-player>Add player</button></header>
+          <p class="admin-card__note">Changing player order or details resets match results so the bracket cannot keep an invalid winner.</p>
+          <div class="player-editor-head" aria-hidden="true"><span>No.</span><span>Flag</span><span>Name</span><span>Nation</span><span>Order</span></div>
+          <div class="player-editor" data-player-editor></div>
+          <div class="admin-card__actions">
+            <button class="button button--primary" type="button" data-save-players>Save players & reset draw</button>
+            <button class="button button--ghost" type="button" data-shuffle>Randomize draw</button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="admin-panel" data-tab-panel="publish">
+      <div class="admin-grid">
+        <article class="admin-card">
+          <header><p>Live publishing</p><h2>Connect GitHub</h2></header>
+          <p class="admin-card__lead">The token stays in this browser. Use a fine-grained token limited to this repository with <strong>Contents: Read and write</strong>.</p>
+          <div class="form-grid">
+            <label><span>Repository owner</span><input id="github-owner" placeholder="your-github-name" autocomplete="off"></label>
+            <label><span>Repository name</span><input id="github-repo" placeholder="nations-cup" autocomplete="off"></label>
+            <label><span>Branch</span><input id="github-branch" value="main" autocomplete="off"></label>
+            <label><span>Data file path</span><input id="github-path" value="tournament-data.json" autocomplete="off"></label>
+            <label class="form-grid__wide"><span>Fine-grained personal access token</span><input id="github-token" type="password" placeholder="github_pat_…" autocomplete="off"></label>
+            <label class="checkbox form-grid__wide"><input id="remember-token" type="checkbox"><span>Remember the token on this device. Leave unchecked on a shared computer.</span></label>
+          </div>
+          <div class="admin-card__actions">
+            <button class="button button--primary" type="button" data-publish>Publish live results</button>
+            <button class="button button--ghost" type="button" data-download>Download data file instead</button>
+          </div>
+        </article>
+
+        <aside class="admin-card admin-card--guide">
+          <header><p>First-time setup</p><h2>Three steps</h2></header>
+          <ol class="setup-list">
+            <li><span>01</span><div><strong>Create the repository</strong><p>Upload every file in this project and enable GitHub Pages from the main branch.</p></div></li>
+            <li><span>02</span><div><strong>Create a limited token</strong><p>Select only this repository and grant repository Contents read/write access.</p></div></li>
+            <li><span>03</span><div><strong>Publish after each result</strong><p>The control room commits tournament-data.json. The public bracket refreshes automatically.</p></div></li>
+          </ol>
+          <div class="security-note"><strong>Important</strong><p>This page is not a secure login system. Keep the admin URL private and never commit your token into the project files.</p></div>
+        </aside>
+      </div>
+
+      <article class="danger-zone">
+        <div><p>Local reset</p><h3>Start over from the original draw</h3><span>This only resets the browser preview. It does not publish until you press Publish.</span></div>
+        <button class="button button--danger" type="button" data-reset>Reset tournament</button>
+      </article>
+    </section>
+  </main>
+
+  <script src="assets/js/tournament.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

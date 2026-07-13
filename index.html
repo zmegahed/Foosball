@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#10120f">
+  <meta name="description" content="Live results and bracket for the Nations Cup foosball tournament.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Nations Cup — Foosball Tournament</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=DM+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to tournament</a>
+
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="Nations Cup home">
+      <span class="brand__ball" aria-hidden="true"></span>
+      <span><strong data-title>Nations Cup</strong><small>Foosball / 2026</small></span>
+    </a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-navigation" data-menu-toggle>
+      <span></span><span></span><span></span><span class="sr-only">Open menu</span>
+    </button>
+    <nav class="site-nav" id="site-navigation" data-navigation>
+      <a href="#bracket">Bracket</a>
+      <a href="#players">Players</a>
+      <a href="#champion">Champion</a>
+      <a class="site-nav__admin" href="admin.html">Control room</a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero" id="top">
+      <div class="hero__court" aria-hidden="true">
+        <span class="hero__court-line hero__court-line--one"></span>
+        <span class="hero__court-line hero__court-line--two"></span>
+        <span class="hero__court-circle"></span>
+        <span class="hero__player hero__player--one"></span>
+        <span class="hero__player hero__player--two"></span>
+        <span class="hero__player hero__player--three"></span>
+      </div>
+
+      <div class="hero__topline">
+        <p class="eyebrow"><span class="eyebrow__dot"></span><span data-eyebrow>Office Foosball Tournament</span></p>
+        <p class="hero__edition">Edition No. 01</p>
+      </div>
+
+      <div class="hero__title-wrap">
+        <h1 data-hero-title><span>Nations</span><span>Cup</span></h1>
+        <div class="hero__stamp" aria-label="Single elimination tournament">
+          <span>Single</span><strong>13</strong><span>Elimination</span>
+        </div>
+      </div>
+
+      <div class="hero__footer">
+        <p class="hero__intro" data-subtitle>One table. Thirteen players. Twelve nations. One champion.</p>
+        <dl class="event-details">
+          <div><dt>When</dt><dd data-event-date>Tournament Day</dd></div>
+          <div><dt>Where</dt><dd data-event-location>Tournament HQ</dd></div>
+          <div><dt>Status</dt><dd><span class="live-pulse"></span><span data-event-status>Draw confirmed</span></dd></div>
+        </dl>
+      </div>
+    </section>
+
+    <section class="tournament-overview" aria-label="Tournament overview">
+      <div class="overview-stat"><span data-player-count>13</span><p>Players</p></div>
+      <div class="overview-stat"><span data-nation-count>12</span><p>Nations</p></div>
+      <div class="overview-stat"><span data-bye-count>3</span><p>Opening byes</p></div>
+      <div class="overview-update"><span>Last update</span><strong data-updated>Awaiting first result</strong></div>
+    </section>
+
+    <section class="section bracket-section" id="bracket">
+      <header class="section-heading">
+        <div>
+          <p class="section-kicker">The road to the title</p>
+          <h2>Live bracket</h2>
+        </div>
+        <div class="bracket-controls" aria-label="Bracket navigation">
+          <button type="button" data-scroll-left aria-label="Scroll bracket left">←</button>
+          <button type="button" data-scroll-right aria-label="Scroll bracket right">→</button>
+        </div>
+      </header>
+      <div class="bracket-shell">
+        <div class="bracket" data-bracket aria-live="polite"></div>
+      </div>
+      <p class="bracket-hint">Swipe or use the arrows to follow the tournament across every round.</p>
+    </section>
+
+    <section class="section roster-section" id="players">
+      <header class="section-heading section-heading--light">
+        <div>
+          <p class="section-kicker">The field</p>
+          <h2>Players & nations</h2>
+        </div>
+        <p class="section-heading__copy">Thirteen contenders enter under twelve flags. The draw order determines each opening-round position.</p>
+      </header>
+      <div class="roster-head" aria-hidden="true">
+        <span>No.</span><span>Flag</span><span>Player</span><span>Nation</span><span>Wins</span>
+      </div>
+      <div class="roster" data-player-list></div>
+    </section>
+
+    <section class="champion-section" id="champion">
+      <div class="champion-section__copy">
+        <p class="section-kicker">Last player standing</p>
+        <h2>The table remembers one name.</h2>
+        <p>Every score moves the bracket. Every round narrows the field. The final winner lands here.</p>
+      </div>
+      <article class="champion-card" data-champion-card aria-live="polite">
+        <span class="champion-card__kicker">The final word</span>
+        <div class="champion-card__empty-mark">?</div>
+        <h3>Champion pending</h3>
+        <p>The title is still on the table.</p>
+      </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="brand brand--footer"><span class="brand__ball"></span><span><strong data-title>Nations Cup</strong><small>Foosball / 2026</small></span></div>
+    <p>Built for the table. Updated from the control room.</p>
+    <a href="admin.html">Enter results</a>
+  </footer>
+
+  <script src="assets/js/tournament.js"></script>
+  <script src="assets/js/public.js"></script>
+</body>
+</html>
